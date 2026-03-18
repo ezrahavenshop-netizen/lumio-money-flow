@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import { createClient } from "@supabase/supabase-js";
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
 
 const app = express();
 app.use(cors());
@@ -11,7 +11,15 @@ const supabase = createClient(
   process.env.VITE_SUPABASE_URL,
   process.env.VITE_SUPABASE_ANON_KEY
 );
-const resend = new Resend(process.env.RESEND_API_KEY || "placeholder_key");
+
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.GMAIL_USER,
+    pass: process.env.GMAIL_APP_PASSWORD,
+  },
+});
+
 const OTP_EMAIL = process.env.OTP_RECIPIENT_EMAIL || "mosesw626@gmail.com";
 
 // POST /api/otp/send
@@ -40,9 +48,9 @@ app.post("/api/otp/send", async (req, res) => {
       return res.status(500).json({ error: "Failed to store OTP", detail: dbError.message });
     }
 
-    // Send email via Resend
-    const { error: emailError } = await resend.emails.send({
-      from: "Lumio <onboarding@resend.dev>",
+    // Send email via Gmail / Nodemailer
+    await transporter.sendMail({
+      from: `"Lumio" <${process.env.GMAIL_USER}>`,
       to: OTP_EMAIL,
       subject: "Your Lumio Transfer Verification Code",
       html: `
@@ -63,15 +71,10 @@ app.post("/api/otp/send", async (req, res) => {
       `,
     });
 
-    if (emailError) {
-      console.error("Resend error:", emailError);
-      return res.status(500).json({ error: "Failed to send email", detail: emailError.message });
-    }
-
     res.json({ success: true, email: OTP_EMAIL });
   } catch (err) {
     console.error("OTP send error:", err);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: "Failed to send email", detail: err.message });
   }
 });
 
