@@ -45,6 +45,10 @@ interface AppContextType {
   addTransaction: (t: Transaction) => void;
   isLoggedIn: boolean;
   setIsLoggedIn: React.Dispatch<React.SetStateAction<boolean>>;
+  isAdmin: boolean;
+  setIsAdmin: React.Dispatch<React.SetStateAction<boolean>>;
+  adminUnreadCount: number;
+  setAdminUnreadCount: React.Dispatch<React.SetStateAction<number>>;
   notifications: Notification[];
   markAllRead: () => void;
   currency: string;
@@ -126,6 +130,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [balance, setBalance] = useState(3750000);
   const [transactions, setTransactions] = useState<Transaction[]>(defaultTransactions);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [adminUnreadCount, setAdminUnreadCount] = useState(0);
   const [notifications, setNotifications] = useState<Notification[]>([
     { id: 1, text: "Your March salary has been credited", read: false },
     { id: 2, text: "Your last transfer was successful", read: false },
@@ -141,7 +147,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   return (
     <AppContext.Provider
-      value={{ user, setUser, balance, setBalance, transactions, addTransaction, isLoggedIn, setIsLoggedIn, notifications, markAllRead, currency: "£" }}
+      value={{
+        user, setUser, balance, setBalance, transactions, addTransaction,
+        isLoggedIn, setIsLoggedIn, isAdmin, setIsAdmin,
+        adminUnreadCount, setAdminUnreadCount,
+        notifications, markAllRead, currency: "£"
+      }}
     >
       {children}
     </AppContext.Provider>

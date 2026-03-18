@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { LayoutDashboard, ArrowRightLeft, Clock, UserCircle, Headphones, LogOut, Bell, Search, Menu, X } from "lucide-react";
 import LumioLogo from "@/components/LumioLogo";
 import { useApp } from "@/context/AppContext";
+import { supabase } from "@/lib/supabase";
 
 const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
@@ -19,7 +20,23 @@ const DashboardLayout: React.FC = () => {
   const { user, setIsLoggedIn, notifications, markAllRead } = useApp();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [maintenanceMode, setMaintenanceMode] = useState(false);
   const unreadCount = notifications.filter((n) => !n.read).length;
+
+  useEffect(() => {
+    supabase.from("admin_settings").select("maintenance_mode").limit(1).single().then(({ data }) => {
+      if (data) setMaintenanceMode(data.maintenance_mode);
+    });
+    const channel = supabase
+      .channel("maintenance-check")
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "admin_settings" }, (payload) => {
+        if (payload.new && typeof payload.new.maintenance_mode === "boolean") {
+          setMaintenanceMode(payload.new.maintenance_mode);
+        }
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, []);
 
   const handleLogout = () => {
     setIsLoggedIn(false);
@@ -75,6 +92,20 @@ const DashboardLayout: React.FC = () => {
       </div>
     </>
   );
+
+  if (maintenanceMode) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-lumio-surface">
+        <div className="text-center max-w-sm px-6">
+          <LumioLogo variant="dark" size="lg" />
+          <h2 className="font-serif text-2xl text-foreground mt-8 mb-3">Under Maintenance</h2>
+          <p className="text-muted-foreground text-sm">
+            Lumio is under maintenance. We will be back shortly.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex bg-lumio-surface">

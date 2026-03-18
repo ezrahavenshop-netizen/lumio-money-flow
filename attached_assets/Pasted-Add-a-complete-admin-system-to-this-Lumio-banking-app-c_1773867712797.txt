@@ -1,0 +1,204 @@
+Add a complete admin system to this Lumio banking app
+connected to Supabase for full persistence.
+
+===================================================
+ADMIN LOGIN
+===================================================
+
+On the existing login page:
+If email === "admin@lumiobank.co.uk" AND
+password === "Lumio@Admin2019"
+→ route to /admin
+Otherwise → /dashboard as normal
+
+/admin fully protected:
+No admin session → redirect to /login
+User cannot access /admin
+Admin cannot access /dashboard
+
+===================================================
+ADMIN SIDEBAR NAV
+===================================================
+
+Overview | Users | Transactions | Alerts | Settings
+Bottom: admin@lumiobank.co.uk + Logout
+
+===================================================
+OVERVIEW  (/admin)
+===================================================
+
+4 stat cards:
+  Total Users
+  Total Balance (sum of all accounts)
+  Total Transfers
+  Transfers Today
+
+Recent Activity feed:
+  Last 10 actions newest first
+  Auto-updates via Supabase real-time
+
+===================================================
+USERS  (/admin/users)
+===================================================
+
+Search bar + "+ Create New User" button
+Table: Avatar | Name | Email | Account Type |
+Balance | Status | Actions
+
+Actions: Edit | Credit | Suspend/Unsuspend | Delete
+
+──── CREATE USER ────
+Modal fields:
+  First Name | Last Name | Email | Phone |
+  Date of Birth | Gender | Marital Status |
+  Occupation | Address | Account Type |
+  Opening Balance | Transfer PIN | Password
+
+On submit:
+  Save to Supabase
+  Auto-generate 8-digit account number
+  KYC: pending | Status: active
+  User can log in immediately
+  Toast: "User created successfully"
+  Alert: "New user created — [name]"
+
+──── EDIT USER ────
+Same fields pre-filled
+Save → updates Supabase
+Toast: "User updated"
+Alert: "User [name] updated"
+
+──── CREDIT ACCOUNT ────
+Modal:
+  Current balance shown
+  Credit Amount *
+  Narration *
+  Admin PIN * (valid: 0000)
+
+On confirm:
+  Add to balance in Supabase
+  Add credit transaction:
+    type: credit
+    reference: ADM-[random 8-char]
+    category: admin credit
+  Toast: "Account credited"
+  Alert: "Account credited — [name] +£[amount]"
+
+──── SUSPEND / UNSUSPEND ────
+Confirmation modal before action
+Suspend → status: suspended in Supabase
+Suspended user on login sees:
+"Your account has been suspended.
+Contact support@lumiobank.co.uk"
+Toast + Alert fire on both actions
+
+──── DELETE ────
+Confirmation modal
+Removes from Supabase
+Toast: "User deleted"
+
+===================================================
+TRANSACTIONS  (/admin/transactions)
+===================================================
+
+Transfer toggle at top:
+  ENABLED / PAUSED
+  Confirmation modal before pausing
+  Paused → sets transfers_enabled: false in Supabase
+  All user transfer pages lock instantly
+  User sees: "Transfers temporarily unavailable.
+  Contact support@lumiobank.co.uk"
+  Enabled → unlocks instantly
+  Alert fires on both actions
+
+Full transactions table:
+  Date | User | Reference | Category |
+  Amount | Type | Status
+  Filter | Sort | Search | Pagination 10 per page
+
+===================================================
+ALERTS  (/admin/alerts)
+===================================================
+
+Live feed newest first
+New alert flashes on arrival
+Bell badge = unread count
+"Mark all read" + "Clear all"
+
+Alert types:
+  Transfer made
+  Account credited
+  Transfers paused/resumed
+  User created/edited/suspended/unsuspended/deleted
+
+All alerts saved to Supabase admin_alerts table
+Real-time subscription updates instantly
+
+===================================================
+SETTINGS  (/admin/settings)
+===================================================
+
+Admin email: admin@lumiobank.co.uk
+Role: Super Admin
+Change Password modal
+
+Toggles (persist to Supabase):
+  Allow New Registrations
+  Maintenance Mode
+    If ON → all users see:
+    "Lumio is under maintenance.
+    We will be back shortly."
+  Email Notifications
+
+===================================================
+SUPABASE TABLES
+===================================================
+
+Run in Supabase SQL Editor:
+
+CREATE TABLE IF NOT EXISTS public.admin_alerts (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  type text NOT NULL,
+  message text NOT NULL,
+  read boolean DEFAULT false,
+  created_at timestamptz DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.admin_settings (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  transfers_enabled boolean DEFAULT true,
+  maintenance_mode boolean DEFAULT false,
+  allow_registration boolean DEFAULT true
+);
+
+INSERT INTO public.admin_settings (
+  transfers_enabled,
+  maintenance_mode,
+  allow_registration
+) VALUES (true, false, true);
+
+ALTER TABLE public.admin_alerts
+ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.admin_settings
+ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow all" ON public.admin_alerts
+FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all" ON public.admin_settings
+FOR ALL USING (true) WITH CHECK (true);
+
+===================================================
+REAL-TIME
+===================================================
+
+Subscribe to: admin_alerts | users |
+transactions | admin_settings
+
+All updates reflect instantly without refresh.
+
+===================================================
+PROTECTED ROUTES
+===================================================
+
+/admin/* → isAdmin required → else /login
+/dashboard → isLoggedIn required → else /login

@@ -7,10 +7,12 @@ import { useApp } from "@/context/AppContext";
 
 const VALID_EMAIL = "Kyuminlee@hotmail.com";
 const VALID_PASSWORD = "Limitless2019$";
+const ADMIN_EMAIL = "admin@lumiobank.co.uk";
+const ADMIN_PASSWORD = "Lumio@Admin2019";
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const { setIsLoggedIn } = useApp();
+  const { setIsLoggedIn, setIsAdmin } = useApp();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -22,7 +24,18 @@ const LoginPage: React.FC = () => {
     e.preventDefault();
     setError(false);
 
-    const emailMatch = email.trim().toLowerCase() === VALID_EMAIL.toLowerCase();
+    const emailLower = email.trim().toLowerCase();
+
+    if (emailLower === ADMIN_EMAIL.toLowerCase() && password === ADMIN_PASSWORD) {
+      setLoading(true);
+      setTimeout(() => {
+        setIsAdmin(true);
+        navigate("/admin");
+      }, 1500);
+      return;
+    }
+
+    const emailMatch = emailLower === VALID_EMAIL.toLowerCase();
     const passwordMatch = password === VALID_PASSWORD;
 
     if (!emailMatch || !passwordMatch) {
@@ -51,7 +64,6 @@ const LoginPage: React.FC = () => {
       <div className="hidden lg:flex lg:w-[55%] relative overflow-hidden flex-col items-center justify-center p-12"
         style={{ background: "#0A1628" }}>
 
-        {/* Diagonal gradient animation */}
         <div className="absolute inset-0 animate-diagonal"
           style={{
             background: "linear-gradient(135deg, rgba(27,58,107,0.5) 0%, transparent 50%, rgba(201,150,58,0.08) 100%)",
@@ -59,7 +71,6 @@ const LoginPage: React.FC = () => {
           }}
         />
 
-        {/* Decorative gold circles */}
         <div className="absolute" style={{ top: "18%", right: "18%", width: 260, height: 260, borderRadius: "50%", border: "1px solid rgba(201,150,58,0.08)" }} />
         <div className="absolute" style={{ top: "22%", right: "22%", width: 180, height: 180, borderRadius: "50%", border: "1px solid rgba(201,150,58,0.08)" }} />
         <div className="absolute" style={{ bottom: "20%", left: "14%", width: 200, height: 200, borderRadius: "50%", border: "1px solid rgba(201,150,58,0.08)" }} />
@@ -102,12 +113,9 @@ const LoginPage: React.FC = () => {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.45, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
         >
-          {/* Mobile logo */}
           <div className="lg:hidden mb-8">
             <LumioLogo variant="dark" size="lg" />
           </div>
-
-          {/* Desktop compact logo */}
           <div className="hidden lg:block mb-8">
             <LumioLogo variant="dark" size="sm" />
           </div>
@@ -118,7 +126,6 @@ const LoginPage: React.FC = () => {
 
           <form onSubmit={handleLogin} className="space-y-5" noValidate>
 
-            {/* Email */}
             <div>
               <label className="block text-sm font-medium text-foreground mb-1.5">
                 Email Address
@@ -134,7 +141,6 @@ const LoginPage: React.FC = () => {
               />
             </div>
 
-            {/* Password */}
             <div>
               <label className="block text-sm font-medium text-foreground mb-1.5">
                 Password
@@ -150,7 +156,6 @@ const LoginPage: React.FC = () => {
                 />
                 <button
                   type="button"
-                  data-testid="button-toggle-password"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                 >
@@ -159,10 +164,8 @@ const LoginPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Error message */}
             {error && (
               <motion.p
-                data-testid="text-login-error"
                 initial={{ opacity: 0, y: -4 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="text-sm text-red-500 font-medium"
@@ -171,11 +174,9 @@ const LoginPage: React.FC = () => {
               </motion.p>
             )}
 
-            {/* Remember + Forgot */}
             <div className="flex items-center justify-between text-sm">
               <label className="flex items-center gap-2 text-muted-foreground cursor-pointer select-none">
                 <input
-                  data-testid="input-remember"
                   type="checkbox"
                   checked={remember}
                   onChange={(e) => setRemember(e.target.checked)}
@@ -185,7 +186,6 @@ const LoginPage: React.FC = () => {
               </label>
               <a
                 href="#"
-                data-testid="link-forgot-password"
                 onClick={(e) => e.preventDefault()}
                 className="text-lumio-accent hover:text-lumio-accent-light transition-colors"
               >
@@ -193,7 +193,6 @@ const LoginPage: React.FC = () => {
               </a>
             </div>
 
-            {/* Submit */}
             <button
               data-testid="button-sign-in"
               type="submit"

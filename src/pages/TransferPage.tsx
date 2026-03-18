@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowRight, CheckCircle, AlertTriangle, Download, Mail, Rota
 import { useApp } from "@/context/AppContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { supabase } from "@/lib/supabase";
 
 const fadeUp = {
   initial: { opacity: 0, y: 20 },
@@ -252,6 +253,24 @@ const TransferPage: React.FC = () => {
   const { balance, setBalance, addTransaction } = useApp();
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
+  const [transfersEnabled, setTransfersEnabled] = useState(true);
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
+
+  useEffect(() => {
+    supabase.from("admin_settings").select("transfers_enabled").limit(1).single().then(({ data }) => {
+      if (data) setTransfersEnabled(data.transfers_enabled);
+      setSettingsLoaded(true);
+    });
+    const channel = supabase
+      .channel("transfer-settings")
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "admin_settings" }, (payload) => {
+        if (payload.new && typeof payload.new.transfers_enabled === "boolean") {
+          setTransfersEnabled(payload.new.transfers_enabled);
+        }
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, []);
 
   const [recipientName, setRecipientName] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
@@ -345,6 +364,27 @@ const TransferPage: React.FC = () => {
     { n: 3, label: "OTP Verification" },
     { n: 4, label: "Confirmation" },
   ];
+
+  if (settingsLoaded && !transfersEnabled) {
+    return (
+      <div className="max-w-5xl mx-auto">
+        <h1 className="font-serif text-3xl text-foreground mb-2">New Transfer</h1>
+        <p className="text-muted-foreground text-sm mb-8">Dashboard &gt; Transfer</p>
+        <div className="flex items-center justify-center min-h-[40vh]">
+          <div className="text-center max-w-sm">
+            <div className="w-16 h-16 rounded-full bg-orange-100 flex items-center justify-center mx-auto mb-4">
+              <AlertTriangle size={28} className="text-orange-500" />
+            </div>
+            <h2 className="font-serif text-2xl text-foreground mb-2">Transfers Unavailable</h2>
+            <p className="text-muted-foreground text-sm">
+              Transfers are temporarily unavailable.<br />
+              Contact <span className="text-lumio-accent">support@lumiobank.co.uk</span>
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-5xl mx-auto">
