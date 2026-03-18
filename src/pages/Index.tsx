@@ -6,16 +6,16 @@ import LumioLogo from "@/components/LumioLogo";
 
 const pageVariants = {
   initial: { opacity: 0, y: 24 },
-  animate: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] as const } },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] as const } }
 };
 
 const stagger = {
-  animate: { transition: { staggerChildren: 0.06 } },
+  animate: { transition: { staggerChildren: 0.06 } }
 };
 
 const fadeUp = {
   initial: { opacity: 0, y: 20 },
-  animate: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] as const } },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] as const } }
 };
 
 const Navbar = () => {
@@ -33,11 +33,11 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
         <LumioLogo variant={scrolled ? "dark" : "light"} />
         <div className="hidden md:flex items-center gap-8">
-          {["Personal", "Business", "Wealth", "About", "Contact"].map((item) => (
-            <a key={item} href="#" className={`text-sm font-sans font-medium transition-colors ${scrolled ? "text-foreground/70 hover:text-foreground" : "text-primary-foreground/70 hover:text-primary-foreground"}`}>
+          {["Personal", "Business", "Wealth", "About", "Contact"].map((item) =>
+          <a key={item} href="#" className={`text-sm font-sans font-medium transition-colors ${scrolled ? "text-foreground/70 hover:text-foreground" : "text-primary-foreground/70 hover:text-primary-foreground"}`}>
               {item}
             </a>
-          ))}
+          )}
         </div>
         <div className="hidden md:flex items-center gap-3">
           <span className={`text-[11px] ${scrolled ? "text-muted-foreground" : "text-primary-foreground/50"} flex items-center gap-1`}>
@@ -54,20 +54,20 @@ const Navbar = () => {
           {mobileOpen ? <X className={scrolled ? "text-foreground" : "text-primary-foreground"} /> : <Menu className={scrolled ? "text-foreground" : "text-primary-foreground"} />}
         </button>
       </div>
-      {mobileOpen && (
-        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="md:hidden bg-lumio-dark/98 backdrop-blur-xl fixed inset-0 top-16 z-50 flex flex-col items-center justify-center gap-6">
-          {["Personal", "Business", "Wealth", "About", "Contact"].map((item) => (
-            <a key={item} href="#" className="text-primary-foreground text-xl font-serif">{item}</a>
-          ))}
+      {mobileOpen &&
+      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="md:hidden bg-lumio-dark/98 backdrop-blur-xl fixed inset-0 top-16 z-50 flex flex-col items-center justify-center gap-6">
+          {["Personal", "Business", "Wealth", "About", "Contact"].map((item) =>
+        <a key={item} href="#" className="text-primary-foreground text-xl font-serif">{item}</a>
+        )}
           <Link to="/login" className="text-lg px-6 py-3 rounded-lg bg-lumio-accent text-accent-foreground" onClick={() => setMobileOpen(false)}>Log In</Link>
         </motion.div>
-      )}
-    </nav>
-  );
+      }
+    </nav>);
+
 };
 
-const HeroSection = () => (
-  <section className="relative min-h-screen bg-lumio-dark flex items-center overflow-hidden">
+const HeroSection = () =>
+<section className="relative min-h-screen bg-lumio-dark flex items-center overflow-hidden">
     <div className="absolute inset-0">
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-lumio-accent/10 blur-[200px] animate-gold-pulse" />
     </div>
@@ -104,12 +104,13 @@ const HeroSection = () => (
             <div className="flex items-center gap-3 mb-6">
               <div className="w-10 h-10 rounded-full bg-lumio-accent/20 flex items-center justify-center font-serif text-sm text-lumio-accent">KM</div>
               <div>
-                <p className="text-primary-foreground text-sm font-medium">Kyu Min Lee</p>
+                <p className="text-primary-foreground text-sm font-medium">
+</p>
                 <p className="text-primary-foreground/40 text-xs">Premier Account</p>
               </div>
             </div>
             <p className="text-primary-foreground/40 text-[11px] uppercase tracking-wider mb-1">Balance</p>
-            <p className="text-primary-foreground font-serif text-2xl mb-6">£3,750,000.00</p>
+            <p className="text-primary-foreground font-serif text-2xl mb-6">£50,000.00</p>
             <div className="space-y-3">
               <div className="flex items-center justify-between p-3 rounded-lg bg-primary-foreground/5">
                 <div className="flex items-center gap-2">
@@ -143,40 +144,39 @@ const HeroSection = () => (
         </motion.div>
       </motion.div>
     </div>
-  </section>
-);
+  </section>;
 
 const features = [
-  { icon: ArrowRight, title: "Instant Transfers", desc: "Send money to any UK or global bank in seconds" },
-  { icon: CreditCard, title: "Smart Cards", desc: "Virtual and physical cards with real-time controls" },
-  { icon: PiggyBank, title: "Savings Vaults", desc: "Separate pots for your goals with interest" },
-  { icon: TrendingUp, title: "Investment Hub", desc: "Grow your wealth with curated portfolios" },
-  { icon: Headphones, title: "24/7 Support", desc: "Live chat and phone support around the clock" },
-  { icon: Shield, title: "Business Accounts", desc: "Dedicated tools for directors and teams" },
-];
+{ icon: ArrowRight, title: "Instant Transfers", desc: "Send money to any UK or global bank in seconds" },
+{ icon: CreditCard, title: "Smart Cards", desc: "Virtual and physical cards with real-time controls" },
+{ icon: PiggyBank, title: "Savings Vaults", desc: "Separate pots for your goals with interest" },
+{ icon: TrendingUp, title: "Investment Hub", desc: "Grow your wealth with curated portfolios" },
+{ icon: Headphones, title: "24/7 Support", desc: "Live chat and phone support around the clock" },
+{ icon: Shield, title: "Business Accounts", desc: "Dedicated tools for directors and teams" }];
 
-const FeaturesSection = () => (
-  <section id="features" className="bg-lumio-surface py-24 lg:py-32">
+
+const FeaturesSection = () =>
+<section id="features" className="bg-lumio-surface py-24 lg:py-32">
     <div className="max-w-7xl mx-auto px-6">
       <motion.div className="text-center mb-16" initial="initial" whileInView="animate" viewport={{ once: true }} variants={stagger}>
         <motion.p variants={fadeUp} className="label-uppercase text-lumio-accent mb-3">What We Offer</motion.p>
         <motion.h2 variants={fadeUp} className="font-serif text-3xl md:text-4xl text-foreground tracking-tight">Everything you need. Nothing you don't.</motion.h2>
       </motion.div>
       <motion.div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6" initial="initial" whileInView="animate" viewport={{ once: true }} variants={stagger}>
-        {features.map((f) => (
-          <motion.div key={f.title} variants={fadeUp} className="glass-card-light p-8 group hover:-translate-y-0.5 transition-all duration-200 hover:border-l-2 hover:border-l-lumio-accent">
+        {features.map((f) =>
+      <motion.div key={f.title} variants={fadeUp} className="glass-card-light p-8 group hover:-translate-y-0.5 transition-all duration-200 hover:border-l-2 hover:border-l-lumio-accent">
             <f.icon className="text-lumio-accent mb-4" size={28} />
             <h3 className="font-serif text-xl text-foreground mb-2">{f.title}</h3>
             <p className="text-muted-foreground text-sm leading-relaxed">{f.desc}</p>
           </motion.div>
-        ))}
+      )}
       </motion.div>
     </div>
-  </section>
-);
+  </section>;
 
-const HowItWorks = () => (
-  <section className="bg-card py-24 lg:py-32">
+
+const HowItWorks = () =>
+<section className="bg-card py-24 lg:py-32">
     <div className="max-w-5xl mx-auto px-6">
       <motion.div className="text-center mb-16" initial="initial" whileInView="animate" viewport={{ once: true }} variants={stagger}>
         <motion.h2 variants={fadeUp} className="font-serif text-3xl md:text-4xl text-foreground tracking-tight">Up and running in minutes.</motion.h2>
@@ -184,23 +184,23 @@ const HowItWorks = () => (
       <motion.div className="grid md:grid-cols-3 gap-12 relative" initial="initial" whileInView="animate" viewport={{ once: true }} variants={stagger}>
         <div className="hidden md:block absolute top-8 left-[16.7%] right-[16.7%] h-0.5 border-t-2 border-dashed border-lumio-accent/30" />
         {[
-          { n: 1, title: "Create your account", desc: "ID verified online in 2 minutes" },
-          { n: 2, title: "Fund your account", desc: "Deposit from any UK bank instantly" },
-          { n: 3, title: "Start banking", desc: "Transfer, save, invest — all in one place" },
-        ].map((s) => (
-          <motion.div key={s.n} variants={fadeUp} className="text-center relative">
+      { n: 1, title: "Create your account", desc: "ID verified online in 2 minutes" },
+      { n: 2, title: "Fund your account", desc: "Deposit from any UK bank instantly" },
+      { n: 3, title: "Start banking", desc: "Transfer, save, invest — all in one place" }].
+      map((s) =>
+      <motion.div key={s.n} variants={fadeUp} className="text-center relative">
             <div className="w-14 h-14 rounded-full bg-lumio-accent text-accent-foreground font-serif text-xl flex items-center justify-center mx-auto mb-4 relative z-10">{s.n}</div>
             <h3 className="font-serif text-xl text-foreground mb-2">{s.title}</h3>
             <p className="text-muted-foreground text-sm">{s.desc}</p>
           </motion.div>
-        ))}
+      )}
       </motion.div>
     </div>
-  </section>
-);
+  </section>;
 
-const SecuritySection = () => (
-  <section className="bg-lumio-dark py-24 lg:py-32">
+
+const SecuritySection = () =>
+<section className="bg-lumio-dark py-24 lg:py-32">
     <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-16 items-center">
       <motion.div initial="initial" whileInView="animate" viewport={{ once: true }} variants={stagger}>
         <motion.p variants={fadeUp} className="label-uppercase text-lumio-accent mb-3">Bank-Grade Security</motion.p>
@@ -209,12 +209,12 @@ const SecuritySection = () => (
           Your data is encrypted with 256-bit SSL. We use two-factor authentication, biometric verification, and FSCS protection up to £85,000 per eligible depositor.
         </motion.p>
         <motion.div variants={fadeUp} className="flex flex-wrap gap-4">
-          {["256-bit Encryption", "Two-Factor Auth", "FSCS Protected"].map((b) => (
-            <div key={b} className="flex items-center gap-2 glass-card px-4 py-3">
+          {["256-bit Encryption", "Two-Factor Auth", "FSCS Protected"].map((b) =>
+        <div key={b} className="flex items-center gap-2 glass-card px-4 py-3">
               <Shield size={16} className="text-lumio-accent" />
               <span className="text-primary-foreground text-sm">{b}</span>
             </div>
-          ))}
+        )}
         </motion.div>
       </motion.div>
       <motion.div initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} className="flex items-center justify-center">
@@ -227,22 +227,22 @@ const SecuritySection = () => (
         </div>
       </motion.div>
     </div>
-  </section>
-);
+  </section>;
+
 
 const testimonials = [
-  { quote: "Switching to Lumio was the best financial decision I've made. Transfers are instant and the dashboard is genuinely beautiful.", name: "Sarah M.", role: "Freelance Designer, London", initials: "SM" },
-  { quote: "As a director managing business and personal accounts, Lumio gives me exactly the oversight I need.", name: "David K.", role: "Operations Director, Manchester", initials: "DK" },
-  { quote: "FSCS protection plus a slick app? This is what banking should have always been.", name: "Priya T.", role: "Senior Analyst, Birmingham", initials: "PT" },
-];
+{ quote: "Switching to Lumio was the best financial decision I've made. Transfers are instant and the dashboard is genuinely beautiful.", name: "Sarah M.", role: "Freelance Designer, London", initials: "SM" },
+{ quote: "As a director managing business and personal accounts, Lumio gives me exactly the oversight I need.", name: "David K.", role: "Operations Director, Manchester", initials: "DK" },
+{ quote: "FSCS protection plus a slick app? This is what banking should have always been.", name: "Priya T.", role: "Senior Analyst, Birmingham", initials: "PT" }];
 
-const TestimonialsSection = () => (
-  <section className="bg-lumio-surface py-24 lg:py-32">
+
+const TestimonialsSection = () =>
+<section className="bg-lumio-surface py-24 lg:py-32">
     <div className="max-w-7xl mx-auto px-6">
       <motion.h2 initial="initial" whileInView="animate" viewport={{ once: true }} variants={fadeUp} className="font-serif text-3xl md:text-4xl text-foreground text-center mb-16 tracking-tight">Trusted by thousands.</motion.h2>
       <motion.div className="grid md:grid-cols-3 gap-6" initial="initial" whileInView="animate" viewport={{ once: true }} variants={stagger}>
-        {testimonials.map((t) => (
-          <motion.div key={t.name} variants={fadeUp} className="glass-card-light p-8">
+        {testimonials.map((t) =>
+      <motion.div key={t.name} variants={fadeUp} className="glass-card-light p-8">
             <div className="flex gap-1 mb-4">{[...Array(5)].map((_, i) => <Star key={i} size={14} className="text-lumio-accent fill-lumio-accent" />)}</div>
             <p className="text-foreground text-sm leading-relaxed mb-6">"{t.quote}"</p>
             <div className="flex items-center gap-3">
@@ -253,14 +253,14 @@ const TestimonialsSection = () => (
               </div>
             </div>
           </motion.div>
-        ))}
+      )}
       </motion.div>
     </div>
-  </section>
-);
+  </section>;
 
-const AppDownload = () => (
-  <section className="bg-gradient-to-b from-lumio-primary to-lumio-dark py-24 lg:py-32">
+
+const AppDownload = () =>
+<section className="bg-gradient-to-b from-lumio-primary to-lumio-dark py-24 lg:py-32">
     <div className="max-w-4xl mx-auto px-6 text-center">
       <motion.div initial="initial" whileInView="animate" viewport={{ once: true }} variants={stagger}>
         <motion.h2 variants={fadeUp} className="font-serif text-3xl md:text-4xl text-primary-foreground tracking-tight mb-4">Take Lumio everywhere.</motion.h2>
@@ -275,11 +275,11 @@ const AppDownload = () => (
         </motion.div>
       </motion.div>
     </div>
-  </section>
-);
+  </section>;
 
-const Footer = () => (
-  <footer className="bg-lumio-dark py-16 border-t border-primary-foreground/5">
+
+const Footer = () =>
+<footer className="bg-lumio-dark py-16 border-t border-primary-foreground/5">
     <div className="max-w-7xl mx-auto px-6">
       <div className="grid md:grid-cols-4 gap-12 mb-12">
         <div>
@@ -287,34 +287,34 @@ const Footer = () => (
           <p className="text-primary-foreground/40 text-sm mt-3 leading-relaxed">The smarter way to bank — anytime, anywhere.</p>
         </div>
         {[
-          { title: "Products", links: ["Personal", "Business", "Wealth", "Cards"] },
-          { title: "Company", links: ["About", "Careers", "Press", "Contact"] },
-          { title: "Legal", links: ["Privacy Policy", "Terms of Service", "Cookie Policy", "Complaints"] },
-        ].map((col) => (
-          <div key={col.title}>
+      { title: "Products", links: ["Personal", "Business", "Wealth", "Cards"] },
+      { title: "Company", links: ["About", "Careers", "Press", "Contact"] },
+      { title: "Legal", links: ["Privacy Policy", "Terms of Service", "Cookie Policy", "Complaints"] }].
+      map((col) =>
+      <div key={col.title}>
             <h4 className="text-primary-foreground text-sm font-medium mb-4">{col.title}</h4>
             <ul className="space-y-2">
-              {col.links.map((l) => (
-                <li key={l}><a href="#" className="text-primary-foreground/40 hover:text-primary-foreground/70 text-sm transition-colors">{l}</a></li>
-              ))}
+              {col.links.map((l) =>
+          <li key={l}><a href="#" className="text-primary-foreground/40 hover:text-primary-foreground/70 text-sm transition-colors">{l}</a></li>
+          )}
             </ul>
           </div>
-        ))}
+      )}
       </div>
       <div className="border-t border-primary-foreground/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
         <p className="text-primary-foreground/30 text-xs">© 2025 Lumio Ltd. FCA Authorised. FSCS Protected. Registered in England & Wales.</p>
         <div className="flex gap-4 text-primary-foreground/30">
-          {["LinkedIn", "X", "Instagram"].map((s) => (
-            <a key={s} href="#" className="text-xs hover:text-primary-foreground/60 transition-colors">{s}</a>
-          ))}
+          {["LinkedIn", "X", "Instagram"].map((s) =>
+        <a key={s} href="#" className="text-xs hover:text-primary-foreground/60 transition-colors">{s}</a>
+        )}
         </div>
       </div>
     </div>
-  </footer>
-);
+  </footer>;
 
-const LandingPage: React.FC = () => (
-  <motion.div variants={pageVariants} initial="initial" animate="animate">
+
+const LandingPage: React.FC = () =>
+<motion.div variants={pageVariants} initial="initial" animate="animate">
     <Navbar />
     <HeroSection />
     <FeaturesSection />
@@ -323,7 +323,7 @@ const LandingPage: React.FC = () => (
     <TestimonialsSection />
     <AppDownload />
     <Footer />
-  </motion.div>
-);
+  </motion.div>;
+
 
 export default LandingPage;
