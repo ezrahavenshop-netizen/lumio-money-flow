@@ -141,7 +141,32 @@ const TransferPage: React.FC = () => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-foreground mb-1.5">Recipient Account Number *</label>
-                <input value={accountNumber} onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, ""))} placeholder="Enter account number" className="w-full px-4 py-3 rounded-lg border border-border bg-card text-foreground text-sm focus-gold transition-all" />
+                <input
+                  type="tel"
+                  value={accountNumber}
+                  onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, "").slice(0, 12))}
+                  onKeyPress={(e) => { if (!/\d/.test(e.key)) e.preventDefault(); }}
+                  onPaste={(e) => {
+                    e.preventDefault();
+                    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 12);
+                    setAccountNumber(pasted);
+                  }}
+                  placeholder="Enter account number"
+                  maxLength={12}
+                  className={`w-full px-4 py-3 rounded-lg border text-foreground text-sm focus-gold transition-all bg-card ${
+                    accountNumber.length > 0 && accountNumber.length < 8
+                      ? "border-lumio-error"
+                      : accountNumber.length >= 8
+                      ? "border-lumio-success"
+                      : "border-border"
+                  }`}
+                />
+                {accountNumber.length > 0 && accountNumber.length < 8 && (
+                  <p className="text-lumio-error text-xs mt-1 flex items-center gap-1"><AlertTriangle size={12} /> Account number must be at least 8 digits</p>
+                )}
+                {accountNumber.length >= 8 && (
+                  <p className="text-lumio-success text-xs mt-1 flex items-center gap-1"><CheckCircle size={12} /> Valid account number</p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-foreground mb-1.5">Bank Name *</label>
