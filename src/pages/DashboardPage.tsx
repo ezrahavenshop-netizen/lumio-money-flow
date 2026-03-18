@@ -5,8 +5,8 @@ import {
   Wifi,
   ArrowRightLeft,
   Clock,
-  CreditCard,
   UserCircle,
+  Headphones,
   TrendingUp,
   Home,
   Copy,
@@ -53,11 +53,17 @@ const CountUp: React.FC<{ target: number; duration?: number }> = ({ target, dura
   return <>{formatCurrency(value)}</>;
 };
 
+const openTidio = () => {
+  if (typeof window !== "undefined" && (window as any).tidioChatApi) {
+    (window as any).tidioChatApi.open();
+  }
+};
+
 const quickActions = [
   { label: "Send Money", Icon: ArrowRightLeft, path: "/transfer" },
   { label: "Transaction History", Icon: Clock, path: "/history" },
-  { label: "My Cards", Icon: CreditCard, path: "/dashboard/cards" },
   { label: "My Profile", Icon: UserCircle, path: "/profile" },
+  { label: "Support", Icon: Headphones, path: null, action: openTidio },
 ];
 
 const cardQuickActionVariants = {
@@ -193,7 +199,7 @@ const DashboardPage: React.FC = () => {
       <div>
         <p className="label-uppercase text-muted-foreground mb-3">Quick Actions</p>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {quickActions.map(({ label, Icon, path }, i) => (
+          {quickActions.map(({ label, Icon, path, action }, i) => (
             <motion.div
               key={label}
               custom={i}
@@ -201,7 +207,7 @@ const DashboardPage: React.FC = () => {
               initial="initial"
               animate="animate"
               data-testid={`quick-action-${label.toLowerCase().replace(/\s+/g, "-")}`}
-              onClick={() => navigate(path)}
+              onClick={() => action ? action() : navigate(path!)}
               className="group bg-white rounded-xl p-5 flex flex-col items-center gap-3 cursor-pointer"
               style={{
                 boxShadow: "0 1px 4px rgba(0,0,0,0.07), 0 4px 16px rgba(0,0,0,0.05)",

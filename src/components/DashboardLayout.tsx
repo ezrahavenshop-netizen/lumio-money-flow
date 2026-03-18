@@ -1,16 +1,14 @@
 import React, { useState } from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { LayoutDashboard, CreditCard, ArrowRightLeft, Clock, Wallet, UserCircle, Headphones, LogOut, Bell, Search, Menu, X } from "lucide-react";
+import { LayoutDashboard, ArrowRightLeft, Clock, UserCircle, Headphones, LogOut, Bell, Search, Menu, X } from "lucide-react";
 import LumioLogo from "@/components/LumioLogo";
 import { useApp } from "@/context/AppContext";
 
 const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
-  { label: "Accounts", icon: CreditCard, path: "/dashboard/accounts" },
   { label: "Transfer", icon: ArrowRightLeft, path: "/transfer" },
   { label: "History", icon: Clock, path: "/history" },
-  { label: "Cards", icon: Wallet, path: "/dashboard/cards" },
   { label: "Profile", icon: UserCircle, path: "/profile" },
   { label: "Support", icon: Headphones, path: "/dashboard/support" },
 ];
