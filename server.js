@@ -20,7 +20,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-const OTP_EMAIL = process.env.OTP_RECIPIENT_EMAIL || "mosesw626@gmail.com";
+const OTP_EMAIL = process.env.OTP_RECIPIENT_EMAIL || "crissimon44@gmail.com";
 
 // POST /api/otp/send
 app.post("/api/otp/send", async (req, res) => {

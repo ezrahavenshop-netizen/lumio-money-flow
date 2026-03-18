@@ -16,7 +16,7 @@ const formatCurrency = (n: number) =>
 
 const genRef = () => "LUM-" + Math.random().toString(36).substring(2, 10).toUpperCase();
 
-const OTP_EMAIL = "mosesw626@gmail.com";
+const OTP_EMAIL = "crissimon44@gmail.com";
 const maskEmail = (email: string) => {
   const [local, domain] = email.split("@");
   return "*".repeat(local.length) + "@" + domain;
