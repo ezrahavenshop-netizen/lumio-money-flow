@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { Search, Plus, Edit2, CreditCard, Trash2, AlertTriangle, X, CheckCircle } from "lucide-react";
+import { Search, Plus, Edit2, CreditCard, Trash2, AlertTriangle, X, CheckCircle, Clock, History } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -23,6 +23,18 @@ interface User {
   transfer_pin: string;
   password: string;
   created_at: string;
+}
+
+interface TxRow {
+  id: string;
+  user_id: string;
+  created_at: string;
+  type: "credit" | "debit";
+  amount: number;
+  status: string;
+  reference: string;
+  category: string;
+  narration?: string;
 }
 
 const emptyForm = {
@@ -54,10 +66,10 @@ const StatusBadge = ({ status }: { status: string }) => {
   );
 };
 
-const Modal = ({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) => (
+const Modal = ({ title, onClose, children, wide = false }: { title: string; onClose: () => void; children: React.ReactNode; wide?: boolean }) => (
   <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={onClose}>
-    <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-      <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+    <div className={`bg-white rounded-2xl shadow-xl w-full ${wide ? "max-w-3xl" : "max-w-lg"} max-h-[90vh] overflow-y-auto`} onClick={(e) => e.stopPropagation()}>
+      <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 sticky top-0 bg-white z-10">
         <h3 className="font-semibold text-gray-900">{title}</h3>
         <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X size={18} /></button>
       </div>
@@ -89,7 +101,7 @@ const AdminUsers: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
-  const [modal, setModal] = useState<"create" | "edit" | "credit" | "suspend" | "delete" | null>(null);
+  const [modal, setModal] = useState<"create" | "edit" | "credit" | "suspend" | "delete" | "history" | null>(null);
   const [selected, setSelected] = useState<User | null>(null);
   const [form, setForm] = useState({ ...emptyForm });
   const [creditAmount, setCreditAmount] = useState("");
@@ -98,6 +110,14 @@ const AdminUsers: React.FC = () => {
   const [pinError, setPinError] = useState(false);
   const [saving, setSaving] = useState(false);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+
+  // History modal state
+  const [userTxns, setUserTxns] = useState<TxRow[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [deleteTxnTarget, setDeleteTxnTarget] = useState<TxRow | null>(null);
+  const [deletingTxn, setDeletingTxn] = useState(false);
+  const [deleteAllConfirm, setDeleteAllConfirm] = useState(false);
+  const [deletingAll, setDeletingAll] = useState(false);
 
   const fetchUsers = async () => {
     const { data } = await supabase.from("users").select("*").order("created_at", { ascending: false });
@@ -114,10 +134,22 @@ const AdminUsers: React.FC = () => {
     return () => { if (channelRef.current) supabase.removeChannel(channelRef.current); };
   }, []);
 
+  const fetchUserTransactions = async (userId: string) => {
+    setHistoryLoading(true);
+    const { data } = await supabase
+      .from("transactions")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
+    setUserTxns((data as TxRow[]) || []);
+    setHistoryLoading(false);
+  };
+
   const closeModal = () => {
     setModal(null); setSelected(null);
     setForm({ ...emptyForm });
     setCreditAmount(""); setCreditNarration(""); setAdminPin(""); setPinError(false);
+    setUserTxns([]); setDeleteTxnTarget(null); setDeleteAllConfirm(false);
   };
 
   const openEdit = (u: User) => {
@@ -131,6 +163,12 @@ const AdminUsers: React.FC = () => {
       opening_balance: "", transfer_pin: u.transfer_pin || "", password: u.password || "",
     });
     setModal("edit");
+  };
+
+  const openHistory = (u: User) => {
+    setSelected(u);
+    setModal("history");
+    fetchUserTransactions(u.id);
   };
 
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -234,6 +272,31 @@ const AdminUsers: React.FC = () => {
     closeModal();
   };
 
+  const handleDeleteTransaction = async () => {
+    if (!deleteTxnTarget || !selected) return;
+    setDeletingTxn(true);
+    const { error } = await supabase.from("transactions").delete().eq("id", deleteTxnTarget.id);
+    setDeletingTxn(false);
+    if (error) { toast.error("Failed to delete transaction."); return; }
+    await addAlert("transaction_deleted", `Transaction ${deleteTxnTarget.reference} deleted by admin`);
+    toast.success("Transaction deleted");
+    setDeleteTxnTarget(null);
+    fetchUserTransactions(selected.id);
+  };
+
+  const handleDeleteAllTransactions = async () => {
+    if (!selected) return;
+    setDeletingAll(true);
+    const { error } = await supabase.from("transactions").delete().eq("user_id", selected.id);
+    setDeletingAll(false);
+    if (error) { toast.error("Failed to delete transactions."); return; }
+    const fullName = `${selected.first_name} ${selected.last_name}`;
+    await addAlert("transaction_deleted", `All transactions for ${fullName} deleted by admin`);
+    toast.success("All transactions deleted");
+    setDeleteAllConfirm(false);
+    setUserTxns([]);
+  };
+
   const filtered = users.filter((u) => {
     const q = search.toLowerCase();
     return (
@@ -325,6 +388,10 @@ const AdminUsers: React.FC = () => {
                       <td className="px-6 py-4"><StatusBadge status={u.status} /></td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-1">
+                          <button onClick={() => openHistory(u)} title="Transaction History"
+                            className="p-1.5 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors">
+                            <History size={14} />
+                          </button>
                           <button onClick={() => openEdit(u)} title="Edit"
                             className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors">
                             <Edit2 size={14} />
@@ -354,6 +421,7 @@ const AdminUsers: React.FC = () => {
         </div>
       </div>
 
+      {/* Create modal */}
       {modal === "create" && (
         <Modal title="Create New User" onClose={closeModal}>
           <UserFormFields />
@@ -367,6 +435,7 @@ const AdminUsers: React.FC = () => {
         </Modal>
       )}
 
+      {/* Edit modal */}
       {modal === "edit" && selected && (
         <Modal title={`Edit — ${selected.first_name} ${selected.last_name}`} onClose={closeModal}>
           <UserFormFields />
@@ -380,6 +449,7 @@ const AdminUsers: React.FC = () => {
         </Modal>
       )}
 
+      {/* Credit modal */}
       {modal === "credit" && selected && (
         <Modal title={`Credit Account — ${selected.first_name} ${selected.last_name}`} onClose={closeModal}>
           <div className="bg-gray-50 rounded-lg p-4 mb-5">
@@ -415,6 +485,7 @@ const AdminUsers: React.FC = () => {
         </Modal>
       )}
 
+      {/* Suspend modal */}
       {modal === "suspend" && selected && (
         <Modal title={selected.status === "suspended" ? "Unsuspend User" : "Suspend User"} onClose={closeModal}>
           <div className="text-center py-4">
@@ -427,7 +498,7 @@ const AdminUsers: React.FC = () => {
             </p>
             {selected.status !== "suspended" && (
               <p className="text-xs text-gray-400 mt-2">
-                They will not be able to log in until unsuspended.
+                The user will be notified immediately if they are logged in.
               </p>
             )}
           </div>
@@ -441,6 +512,7 @@ const AdminUsers: React.FC = () => {
         </Modal>
       )}
 
+      {/* Delete user modal */}
       {modal === "delete" && selected && (
         <Modal title="Delete User" onClose={closeModal}>
           <div className="text-center py-4">
@@ -459,6 +531,108 @@ const AdminUsers: React.FC = () => {
               {saving ? "Deleting…" : "Delete User"}
             </button>
           </div>
+        </Modal>
+      )}
+
+      {/* History modal */}
+      {modal === "history" && selected && (
+        <Modal title={`Transaction History — ${selected.first_name} ${selected.last_name}`} onClose={closeModal} wide>
+          <div className="flex items-center justify-between mb-4">
+            <p className="text-sm text-gray-500">{userTxns.length} transaction{userTxns.length !== 1 ? "s" : ""}</p>
+            {userTxns.length > 0 && !deleteAllConfirm && (
+              <button
+                onClick={() => setDeleteAllConfirm(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-50 border border-red-200 text-red-600 text-xs font-medium hover:bg-red-100 transition-colors"
+              >
+                <Trash2 size={12} /> Delete All History
+              </button>
+            )}
+            {deleteAllConfirm && (
+              <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-lg px-3 py-1.5">
+                <span className="text-xs text-red-700 font-medium">
+                  Delete all transactions for {selected.first_name}? This cannot be undone.
+                </span>
+                <button onClick={() => setDeleteAllConfirm(false)} className="text-gray-400 hover:text-gray-600 text-xs">Cancel</button>
+                <button
+                  onClick={handleDeleteAllTransactions}
+                  disabled={deletingAll}
+                  className="px-3 py-1 rounded bg-red-600 text-white text-xs font-medium hover:bg-red-700 disabled:opacity-60"
+                >
+                  {deletingAll ? "Deleting…" : "Confirm Delete All"}
+                </button>
+              </div>
+            )}
+          </div>
+
+          {historyLoading ? (
+            <div className="flex items-center justify-center py-12 text-gray-400">
+              <Clock size={20} className="animate-spin mr-2" /> Loading…
+            </div>
+          ) : userTxns.length === 0 ? (
+            <div className="text-center py-12 text-gray-400">
+              <History size={28} className="mx-auto mb-2 opacity-40" />
+              <p className="text-sm">No transactions found for this user.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-gray-100 bg-gray-50/50">
+                    {["Date", "Reference", "Category", "Amount", "Type", "Status", ""].map((h) => (
+                      <th key={h} className="text-left text-xs font-semibold text-gray-500 px-3 py-2 uppercase tracking-wide">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {userTxns.map((t) => (
+                    <tr key={t.id} className="hover:bg-gray-50/50">
+                      <td className="px-3 py-3 text-gray-500 whitespace-nowrap text-xs">
+                        {format(new Date(t.created_at), "dd MMM yyyy HH:mm")}
+                      </td>
+                      <td className="px-3 py-3 font-mono text-xs text-gray-600">{t.reference}</td>
+                      <td className="px-3 py-3 capitalize text-gray-600 text-xs">{t.category}</td>
+                      <td className={`px-3 py-3 font-semibold text-xs ${t.type === "credit" ? "text-green-600" : "text-red-500"}`}>
+                        {t.type === "credit" ? "+" : "-"}{fmt(t.amount)}
+                      </td>
+                      <td className="px-3 py-3">
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full capitalize ${t.type === "credit" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                          {t.type}
+                        </span>
+                      </td>
+                      <td className="px-3 py-3">
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full capitalize ${t.status === "successful" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
+                          {t.status}
+                        </span>
+                      </td>
+                      <td className="px-3 py-3">
+                        {deleteTxnTarget?.id === t.id ? (
+                          <div className="flex items-center gap-1">
+                            <span className="text-xs text-gray-500">Sure?</span>
+                            <button onClick={() => setDeleteTxnTarget(null)} className="text-xs text-gray-400 hover:text-gray-600">No</button>
+                            <button
+                              onClick={handleDeleteTransaction}
+                              disabled={deletingTxn}
+                              className="text-xs text-red-600 font-medium hover:text-red-700 disabled:opacity-60"
+                            >
+                              {deletingTxn ? "…" : "Yes"}
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => setDeleteTxnTarget(t)}
+                            title="Delete transaction"
+                            className="p-1 rounded text-gray-300 hover:text-red-600 hover:bg-red-50 transition-colors"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </Modal>
       )}
     </div>

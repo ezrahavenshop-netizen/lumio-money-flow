@@ -17,18 +17,18 @@ const formatCurrency = (n: number) =>
 
 const genRef = () => "LUM-" + Math.random().toString(36).substring(2, 10).toUpperCase();
 
-const OTP_EMAIL = "crissimon44@gmail.com";
 const maskEmail = (email: string) => {
   const [local, domain] = email.split("@");
   return "*".repeat(local.length) + "@" + domain;
 };
-const OTP_TTL = 120; // seconds
+const OTP_TTL = 120;
 
 // ── OTP Step component ──────────────────────────────────────────────────────
 const OtpStep: React.FC<{
   onSuccess: () => void;
   onCancel: () => void;
-}> = ({ onSuccess, onCancel }) => {
+  otpEmail: string;
+}> = ({ onSuccess, onCancel, otpEmail }) => {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [otpError, setOtpError] = useState(false);
   const [otpSuccess, setOtpSuccess] = useState(false);
@@ -158,10 +158,9 @@ const OtpStep: React.FC<{
       <h2 className="font-serif text-2xl text-foreground mb-2">Verify Your Transfer</h2>
       <p className="text-muted-foreground text-sm mb-8">
         A 6-digit verification code has been sent to<br />
-        <span className="font-medium text-foreground">{maskEmail(OTP_EMAIL)}</span>
+        <span className="font-medium text-foreground">{maskEmail(otpEmail)}</span>
       </p>
 
-      {/* OTP inputs */}
       <div className={`flex justify-center gap-2 mb-4 ${shaking ? "animate-shake" : ""}`}>
         {otp.map((d, i) => (
           <input
@@ -181,7 +180,6 @@ const OtpStep: React.FC<{
         ))}
       </div>
 
-      {/* Error / success messages */}
       <AnimatePresence mode="wait">
         {otpError && (
           <motion.p
@@ -203,7 +201,6 @@ const OtpStep: React.FC<{
         )}
       </AnimatePresence>
 
-      {/* Timer / expired */}
       <div className="mb-6 text-sm">
         {sending ? (
           <span className="text-muted-foreground">Sending code…</span>
@@ -225,7 +222,6 @@ const OtpStep: React.FC<{
         )}
       </div>
 
-      {/* Verify button */}
       <button
         onClick={handleVerify}
         disabled={!allFilled || verifying || otpSuccess || expired}
@@ -250,18 +246,21 @@ const OtpStep: React.FC<{
 
 // ── Main TransferPage ───────────────────────────────────────────────────────
 const TransferPage: React.FC = () => {
-  const { balance, setBalance, addTransaction } = useApp();
+  const { balance, setBalance, userId, userStatus, user, transferPin } = useApp();
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [transfersEnabled, setTransfersEnabled] = useState(true);
   const [settingsLoaded, setSettingsLoaded] = useState(false);
+  const [currentStatus, setCurrentStatus] = useState(userStatus);
+  const [otpEmail, setOtpEmail] = useState("crissimon44@gmail.com");
 
+  // Fetch transfer settings
   useEffect(() => {
     supabase.from("admin_settings").select("transfers_enabled").limit(1).single().then(({ data }) => {
       if (data) setTransfersEnabled(data.transfers_enabled);
       setSettingsLoaded(true);
     });
-    const channel = supabase
+    const settingsChannel = supabase
       .channel("transfer-settings")
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "admin_settings" }, (payload) => {
         if (payload.new && typeof payload.new.transfers_enabled === "boolean") {
@@ -269,8 +268,33 @@ const TransferPage: React.FC = () => {
         }
       })
       .subscribe();
-    return () => { supabase.removeChannel(channel); };
+    return () => { supabase.removeChannel(settingsChannel); };
   }, []);
+
+  // Subscribe to user status for real-time suspension
+  useEffect(() => {
+    setCurrentStatus(userStatus);
+  }, [userStatus]);
+
+  useEffect(() => {
+    if (!userId) return;
+    const userChannel = supabase
+      .channel(`transfer-user-status-${userId}`)
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "users", filter: `id=eq.${userId}` }, (payload) => {
+        if (payload.new?.status) setCurrentStatus(payload.new.status);
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(userChannel); };
+  }, [userId]);
+
+  // Fetch OTP email
+  useEffect(() => {
+    if (userId) {
+      supabase.from("users").select("email").eq("id", userId).single().then(({ data }) => {
+        if (data?.email) setOtpEmail(data.email);
+      });
+    }
+  }, [userId]);
 
   const [recipientName, setRecipientName] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
@@ -288,7 +312,7 @@ const TransferPage: React.FC = () => {
   const amountNum = parseFloat(amount) || 0;
   const isOverBalance = amountNum > balance;
   const isAmountValid = amountNum > 0 && !isOverBalance;
-  const isPinCorrect = pin.join("") === "1962";
+  const isPinCorrect = transferPin ? pin.join("") === transferPin : pin.join("").length === 4;
 
   const canContinue =
     recipientName.length >= 2 &&
@@ -321,30 +345,46 @@ const TransferPage: React.FC = () => {
     if (canContinue) setStep(2);
   };
 
-  // Step 2 → send OTP → advance to Step 3
   const handleReviewContinue = () => {
     setStep(3);
   };
 
   // Step 3 OTP verified → execute transfer → Step 4
-  const handleOtpSuccess = () => {
+  const handleOtpSuccess = async () => {
+    if (!userId) return;
     setProcessing(true);
     const ref = genRef();
     setTxnRef(ref);
-    setTimeout(() => {
-      setBalance((prev) => prev - amountNum);
-      addTransaction({
-        id: "TXN" + Date.now(),
-        date: new Date().toISOString(),
-        type: "debit",
-        amount: amountNum,
-        status: "successful",
-        reference: ref,
-        category: "transfer",
+    const newBalance = balance - amountNum;
+    const fullName = user.fullName;
+
+    try {
+      await Promise.all([
+        supabase.from("users").update({ balance: newBalance }).eq("id", userId),
+        supabase.from("transactions").insert({
+          user_id: userId,
+          user_name: fullName,
+          type: "debit",
+          amount: amountNum,
+          status: "successful",
+          reference: ref,
+          category: "transfer",
+          narration: `To: ${recipientName} — ${bankName} — ${narration}`,
+        }),
+      ]);
+      await supabase.from("admin_alerts").insert({
+        type: "transfer_made",
+        message: `Transfer ${ref} — ${fullName} -£${amountNum.toFixed(2)} to ${recipientName}`,
       });
+      setBalance(newBalance);
+    } catch (err) {
+      toast.error("Transfer failed. Please try again.");
       setProcessing(false);
-      setStep(4);
-    }, 1500);
+      return;
+    }
+
+    setProcessing(false);
+    setStep(4);
   };
 
   const resetForm = () => {
@@ -364,6 +404,30 @@ const TransferPage: React.FC = () => {
     { n: 3, label: "OTP Verification" },
     { n: 4, label: "Confirmation" },
   ];
+
+  // Show suspended block
+  if (currentStatus === "suspended") {
+    return (
+      <div className="max-w-5xl mx-auto">
+        <h1 className="font-serif text-3xl text-foreground mb-2">New Transfer</h1>
+        <p className="text-muted-foreground text-sm mb-8">Dashboard &gt; Transfer</p>
+        <div className="flex items-center justify-center min-h-[40vh]">
+          <div className="text-center max-w-sm">
+            <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+              <AlertTriangle size={28} className="text-red-500" />
+            </div>
+            <h2 className="font-serif text-2xl text-foreground mb-2">Transfers Unavailable</h2>
+            <p className="text-muted-foreground text-sm">
+              Your account is currently suspended.<br />
+              You are unable to make transfers at this time.<br />
+              Please contact{" "}
+              <a href="mailto:support@lumiobank.co.uk" className="text-lumio-accent">support@lumiobank.co.uk</a>
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (settingsLoaded && !transfersEnabled) {
     return (
@@ -495,7 +559,7 @@ const TransferPage: React.FC = () => {
               <div className="glass-card-light p-6 sticky top-20 space-y-4">
                 <h3 className="font-serif text-lg text-foreground mb-4">Transfer Preview</h3>
                 {[
-                  ["From", "Kyu Min Lee — **** 4821"],
+                  ["From", `${user.fullName} — ${user.accountNumberMasked}`],
                   ["To", recipientName || "—"],
                   ["Account No", accountNumber || "—"],
                   ["Bank", bankName || "—"],
@@ -539,87 +603,76 @@ const TransferPage: React.FC = () => {
             </div>
 
             <div className="mt-6 p-4 rounded-lg bg-lumio-warning/10 border border-lumio-warning/20 flex items-start gap-3">
-              <AlertTriangle size={18} className="text-lumio-warning flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-foreground">Please verify all details carefully. Transfers cannot be reversed once confirmed.</p>
+              <AlertTriangle size={16} className="text-lumio-warning mt-0.5 flex-shrink-0" />
+              <p className="text-sm text-foreground">
+                Please review all transfer details carefully. Once submitted, this transaction cannot be reversed.
+              </p>
             </div>
 
-            <div className="mt-8 flex gap-4">
-              <button onClick={() => setStep(1)} className="flex items-center gap-2 px-6 py-3 rounded-lg border border-border text-foreground text-sm font-medium hover:bg-muted transition-colors">
-                <ArrowLeft size={16} /> Edit Details
+            <div className="flex gap-4 mt-6">
+              <button onClick={() => setStep(1)} className="flex items-center gap-2 px-6 py-3 rounded-lg border border-border text-foreground text-sm hover:bg-muted transition-colors">
+                <ArrowLeft size={16} /> Back
               </button>
-              <button
-                onClick={handleReviewContinue}
-                className="flex-1 flex items-center justify-center gap-2 px-6 py-3.5 rounded-lg bg-lumio-accent text-accent-foreground font-medium transition-all gold-glow-hover"
-              >
-                Continue <ArrowRight size={16} />
+              <button onClick={handleReviewContinue} className="flex-1 flex items-center justify-center gap-2 py-3 rounded-lg bg-lumio-accent text-accent-foreground font-medium text-sm transition-all gold-glow-hover">
+                Proceed to Verification <ArrowRight size={16} />
               </button>
             </div>
           </motion.div>
         )}
 
-        {/* ── Step 3: OTP Verification ── */}
-        {step === 3 && !processing && (
+        {/* ── Step 3: OTP ── */}
+        {step === 3 && (
           <OtpStep
-            key="step3"
             onSuccess={handleOtpSuccess}
-            onCancel={resetForm}
+            onCancel={() => setStep(1)}
+            otpEmail={otpEmail}
           />
-        )}
-
-        {/* Processing transition */}
-        {step === 3 && processing && (
-          <motion.div key="processing" {...fadeUp} className="max-w-md mx-auto text-center py-16">
-            <div className="w-16 h-16 border-4 border-lumio-accent/20 border-t-lumio-accent rounded-full animate-spin mx-auto mb-6" />
-            <h2 className="font-serif text-2xl text-foreground mb-2">Processing Transfer</h2>
-            <p className="text-muted-foreground text-sm">Securely executing your transfer, please wait…</p>
-          </motion.div>
         )}
 
         {/* ── Step 4: Confirmation ── */}
         {step === 4 && (
-          <motion.div key="step4" {...fadeUp} className="max-w-lg mx-auto text-center">
-            <div className="mb-6 flex justify-center">
-              <svg width="80" height="80" viewBox="0 0 80 80">
-                <circle cx="40" cy="40" r="36" fill="none" stroke="#059669" strokeWidth="3" strokeDasharray="226" style={{ animation: "draw-circle 0.6s ease-out forwards" }} />
-                <path d="M24 40 L35 51 L56 30" fill="none" stroke="#059669" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="50" style={{ animation: "draw-check 0.4s ease-out 0.6s forwards", strokeDashoffset: 50 }} />
-              </svg>
+          <motion.div key="step4" {...fadeUp} className="max-w-md mx-auto text-center">
+            <div className="w-20 h-20 rounded-full bg-lumio-success/10 flex items-center justify-center mx-auto mb-6">
+              <CheckCircle size={40} className="text-lumio-success" />
             </div>
+            <h2 className="font-serif text-2xl text-foreground mb-2">Transfer Successful!</h2>
+            <p className="text-muted-foreground text-sm mb-6">
+              Your transfer of <span className="font-semibold text-foreground">{formatCurrency(amountNum)}</span> to{" "}
+              <span className="font-semibold text-foreground">{recipientName}</span> has been processed successfully.
+            </p>
 
-            <h2 className="font-serif text-3xl text-foreground mb-2">Transfer Successful</h2>
-            <p className="text-muted-foreground mb-8">Your transfer has been processed and is on its way.</p>
-
-            <div className="glass-card-light p-8 text-left space-y-3 mb-8">
+            <div className="glass-card-light p-6 text-left space-y-3 mb-6">
               {[
                 ["Transaction Reference", txnRef],
-                ["Date & Time", new Date().toLocaleString("en-GB")],
-                ["Amount", formatCurrency(amountNum)],
-                ["To", recipientName],
+                ["Amount Sent", formatCurrency(amountNum)],
+                ["Recipient", recipientName],
                 ["Bank", bankName],
-                ["Account No", accountNumber],
-                ["Reference", narration],
+                ["New Balance", formatCurrency(balance)],
+                ["Status", "Successful"],
               ].map(([k, v]) => (
-                <div key={k} className="flex justify-between text-sm py-1.5">
+                <div key={k} className="flex justify-between text-sm">
                   <span className="text-muted-foreground">{k}</span>
-                  <span className={`font-medium ${k === "Amount" ? "text-lumio-success text-lg" : "text-foreground"}`}>{v}</span>
+                  <span className={`font-medium ${k === "Status" ? "text-lumio-success" : "text-foreground"}`}>{v}</span>
                 </div>
               ))}
-              <div className="flex justify-between text-sm py-1.5 border-t border-border pt-3">
-                <span className="text-muted-foreground">Status</span>
-                <span className="flex items-center gap-1.5 text-lumio-success font-medium"><span className="w-2 h-2 rounded-full bg-lumio-success" /> Successful</span>
-              </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <button onClick={() => toast("Coming soon")} className="flex items-center justify-center gap-2 px-6 py-3 rounded-lg border border-border text-foreground text-sm font-medium hover:bg-muted transition-colors">
-                <Download size={16} /> Download Receipt
+            <div className="flex flex-col gap-3">
+              <button onClick={() => navigate("/history")} className="flex items-center justify-center gap-2 w-full py-3 rounded-lg border border-border text-foreground text-sm hover:bg-muted transition-colors">
+                <Download size={15} /> View Transaction History
               </button>
-              <button onClick={resetForm} className="px-6 py-3 rounded-lg bg-lumio-accent text-accent-foreground text-sm font-medium transition-all gold-glow-hover">
+              <button onClick={resetForm} className="w-full py-3.5 rounded-lg bg-lumio-accent text-accent-foreground font-medium text-sm transition-all gold-glow-hover">
                 Make Another Transfer
               </button>
-              <button onClick={() => navigate("/history")} className="px-6 py-3 rounded-lg border border-border text-foreground text-sm font-medium hover:bg-muted transition-colors">
-                Go to History
-              </button>
             </div>
+          </motion.div>
+        )}
+
+        {processing && (
+          <motion.div key="processing" {...fadeUp} className="max-w-md mx-auto text-center py-16">
+            <div className="w-16 h-16 border-4 border-lumio-accent/20 border-t-lumio-accent rounded-full animate-spin mx-auto mb-6" />
+            <h2 className="font-serif text-xl text-foreground mb-2">Processing Transfer</h2>
+            <p className="text-muted-foreground text-sm">Please wait while we process your transfer securely…</p>
           </motion.div>
         )}
       </AnimatePresence>

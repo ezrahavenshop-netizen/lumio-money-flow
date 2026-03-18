@@ -11,7 +11,7 @@ const ADMIN_PASSWORD = "Lumio@Admin2019";
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const { setIsLoggedIn, setIsAdmin, setUser, setBalance } = useApp();
+  const { setIsLoggedIn, setIsAdmin, setUser, setBalance, setUserId, setUserStatus, setTransferPin } = useApp();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -52,10 +52,11 @@ const LoginPage: React.FC = () => {
         setSuspended(true);
         return;
       }
+      const fullName = `${dbUser.first_name} ${dbUser.last_name}`;
       setUser({
         firstName: dbUser.first_name,
         lastName: dbUser.last_name,
-        fullName: `${dbUser.first_name} ${dbUser.last_name}`,
+        fullName,
         initials: `${dbUser.first_name?.[0] || ""}${dbUser.last_name?.[0] || ""}`.toUpperCase(),
         avatarUrl: null,
         dateOfBirth: dbUser.date_of_birth || "",
@@ -72,17 +73,13 @@ const LoginPage: React.FC = () => {
         kycVerified: dbUser.kyc_status === "verified",
       });
       setBalance(Number(dbUser.balance) || 0);
-      setTimeout(() => {
-        setIsLoggedIn(true);
-        navigate("/dashboard");
-      }, 800);
-      return;
-    }
+      setUserId(dbUser.id);
+      setUserStatus(dbUser.status || "active");
+      setTransferPin(dbUser.transfer_pin || "");
 
-    if (
-      emailLower === "kyuminlee@hotmail.com" &&
-      password === "Limitless2019$"
-    ) {
+      // Log login alert
+      await supabase.from("admin_alerts").insert({ type: "user_login", message: `User ${fullName} logged in` });
+
       setTimeout(() => {
         setIsLoggedIn(true);
         navigate("/dashboard");

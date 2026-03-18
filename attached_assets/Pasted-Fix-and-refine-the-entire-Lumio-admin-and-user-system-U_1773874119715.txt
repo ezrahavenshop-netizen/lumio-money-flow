@@ -1,0 +1,282 @@
+Fix and refine the entire Lumio admin and user system.
+Use only real Supabase data everywhere — no hardcoded
+or hallucinated data anywhere in the app.
+
+===================================================
+1. NEW USER REGISTRATION → ADMIN SYNC
+===================================================
+
+When a new user registers:
+  Save to Supabase users table immediately
+  Admin /admin/users table fetches from Supabase
+  in real time via subscription
+  New user appears on admin end instantly
+  without any page refresh
+  Alert fires: "New user registered — [name]"
+
+===================================================
+2. TRANSACTIONS → ADMIN SYNC + BALANCE TALLY
+===================================================
+
+Every transaction made by any user:
+  Saves to Supabase transactions table immediately
+  Updates user balance in Supabase instantly
+  Admin /admin/transactions fetches live from
+  Supabase — shows all transactions across all users
+  Balance shown on admin users table always reads
+  directly from Supabase users.balance
+  No cached or hardcoded values anywhere
+  Everything tallies in real time
+
+===================================================
+3. ADMIN DELETE TRANSACTION HISTORY
+===================================================
+
+On admin /admin/users:
+  Each user row has a "History" button
+  Opens modal showing that user's full
+  transaction history pulled from Supabase
+
+  Each transaction row has a delete icon
+  On delete:
+    Confirmation modal: "Delete this transaction?
+    This cannot be undone."
+    Confirm → deletes row from Supabase
+    transactions table
+    Transaction disappears from:
+      Admin transactions page instantly
+      User history page instantly
+      Both stay in sync via Supabase real-time
+
+  "Delete All History" button at top of modal:
+    Confirmation: "Delete all transactions for
+    [name]? This cannot be undone."
+    Confirm → deletes all rows for that user_id
+    from Supabase transactions table
+    Both admin and user history clear instantly
+
+===================================================
+4. FULL DATA SYNC — USER ↔ ADMIN
+===================================================
+
+Every piece of data in the app must come from
+Supabase only. No AppContext arrays. No hardcoded
+transactions. No hardcoded balances.
+
+All pages read live from Supabase:
+  User dashboard balance → users.balance
+  User transaction history → transactions table
+  Admin user table → users table
+  Admin transactions → transactions table
+  Admin balance totals → sum from users table
+  Admin stats → counted from Supabase tables
+
+Any change on user side reflects on admin instantly
+Any change on admin side reflects on user instantly
+All via Supabase real-time subscriptions
+
+===================================================
+5. REMOVE TRANSFER PAUSE TOGGLE
+===================================================
+
+Remove the global transfer pause toggle completely
+from admin transactions page.
+
+Replace with per-user suspension logic:
+
+When admin suspends a user:
+  Set users.status = 'suspended' in Supabase
+
+  User receives immediate toast popup if they
+  are currently logged in:
+    Style: red background, white text
+    Cannot be auto-dismissed
+    Has a close (X) button
+    Message:
+    "⚠ Your account has been suspended.
+    For more information please contact our
+    support team at support@lumiobank.co.uk
+    We are here to help."
+
+  Transfer page checks users.status on load
+  AND on every transfer attempt:
+    If suspended → block transfer entirely
+    Hide transfer form completely
+    Show message in place of form:
+    "Your account is currently suspended.
+    Please contact support@lumiobank.co.uk"
+
+  User cannot initiate any transfer while
+  suspended regardless of how they navigate
+
+===================================================
+6. SUSPENDED ACCOUNT BANNER
+===================================================
+
+While users.status === 'suspended':
+  Show a fixed banner at the very top of every
+  page inside the user dashboard (above everything):
+    Red background
+    White text
+    "⚠ Account Suspended — Your account is
+    currently suspended. Contact
+    support@lumiobank.co.uk for assistance."
+    Cannot be dismissed or closed
+    Stays visible on every page until admin
+    unsuspends the account in Supabase
+
+When admin unsuspends:
+  Set users.status = 'active' in Supabase
+  Banner disappears instantly via real-time
+  Transfer page unlocks instantly
+  Toast: "Your account has been reactivated."
+
+===================================================
+7. TRANSFER BLOCKED WHILE SUSPENDED
+===================================================
+
+On Transfer page (/transfer):
+  On page load check users.status from Supabase
+  Subscribe to real-time changes on users table
+  for the current user
+
+  If status === 'suspended':
+    Hide entire transfer form
+    Show full-width message:
+    "Your account is currently suspended.
+    You are unable to make transfers at this time.
+    Please contact support@lumiobank.co.uk"
+    No fields visible. No buttons visible.
+
+  If admin unsuspends while user is on
+  transfer page:
+    Form reappears instantly via subscription
+    No page refresh needed
+
+===================================================
+8. SUPABASE ONLY — NO HALLUCINATIONS
+===================================================
+
+Remove all hardcoded data from the entire app:
+  No hardcoded transaction arrays
+  No hardcoded balance values
+  No hardcoded user objects in AppContext
+  No mock data anywhere
+
+Replace everything with live Supabase queries:
+  On app load → fetch current user from Supabase
+  On dashboard load → fetch balance from Supabase
+  On history load → fetch transactions from Supabase
+  On admin load → fetch all users from Supabase
+  On admin transactions → fetch all from Supabase
+
+AppContext only stores:
+  currentUser (fetched from Supabase on login)
+  isLoggedIn boolean
+  isAdmin boolean
+  Any UI state (active tab, notifications read etc)
+
+===================================================
+9. i can no longer receive otp, says failed to send email, fix that
+===================================================
+10. ADMIN CREDIT → USER HISTORY
+===================================================
+
+When admin credits a user account:
+  Add to Supabase transactions table:
+    user_id: [credited user id]
+    type: credit
+    amount: [credited amount]
+    reference: ADM-[random 8-char]
+    category: Admin Credit
+    status: successful
+    created_at: now()
+
+  Update users.balance in Supabase:
+    New balance = current balance + credit amount
+
+  This transaction appears immediately in:
+    User transaction history page
+    Admin transactions page
+    User dashboard recent transactions
+    User available balance card
+    Admin user table balance column
+  All via Supabase real-time — no refresh needed
+
+  Alert fires: "Account credited — [name] +£[amount]"
+  User receives toast if currently logged in:
+    Green background
+    "£[amount] has been credited to your account."
+
+===================================================
+11. FULL ACTIVITY LOG — ALL IN AND OUTS
+===================================================
+
+Every single action by any user or admin
+must create a record in Supabase.
+
+User actions that create transaction records:
+  Transfer made → debit transaction saved
+  Account credited by admin → credit transaction saved
+
+User actions that create alert records:
+  Login → alert: "User [name] logged in"
+  Transfer made → alert: "Transfer [ref] — £[amount]"
+  OTP requested → alert: "OTP requested by [name]"
+  Profile updated → alert: "Profile updated by [name]"
+
+Admin actions that create alert records:
+  User created → alert: "New user created — [name]"
+  User edited → alert: "User [name] updated"
+  User credited → alert: "Account credited — [name]"
+  User suspended → alert: "User [name] suspended"
+  User unsuspended → alert: "User [name] unsuspended"
+  User deleted → alert: "User [name] deleted"
+  Transaction deleted → alert: "Transaction [ref]
+  deleted by admin"
+
+All alerts:
+  Saved to Supabase admin_alerts table
+  Appear in /admin/alerts feed in real time
+  Increment admin bell badge instantly
+  Timestamped accurately
+
+===================================================
+SUPABASE REAL-TIME SUBSCRIPTIONS
+===================================================
+
+Subscribe to all these tables:
+  users → admin users table + user dashboard
+  transactions → admin transactions + user history
+  admin_alerts → admin bell badge + alerts feed
+  admin_settings → maintenance + settings sync
+  transfer_otps → OTP validation
+
+All subscriptions:
+supabase
+  .channel('[table]')
+  .on('postgres_changes',
+    { event: '*', schema: 'public',
+      table: '[table]' },
+    (payload) => { handle update }
+  )
+  .subscribe()
+
+===================================================
+ADDITIONAL SQL FOR SUPABASE
+===================================================
+
+Run in Supabase SQL Editor:
+
+ALTER TABLE public.users
+ADD COLUMN IF NOT EXISTS status text DEFAULT 'active';
+
+ALTER TABLE public.transactions
+ADD COLUMN IF NOT EXISTS user_id uuid REFERENCES
+public.users(id) ON DELETE CASCADE;
+
+CREATE INDEX IF NOT EXISTS transactions_user_id_idx
+ON public.transactions(user_id);
+
+CREATE INDEX IF NOT EXISTS transactions_created_at_idx
+ON public.transactions(created_at DESC);

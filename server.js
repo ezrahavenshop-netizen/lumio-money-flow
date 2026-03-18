@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import { createClient } from "@supabase/supabase-js";
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 
 const app = express();
 app.use(cors());
@@ -12,15 +12,13 @@ const supabase = createClient(
   process.env.VITE_SUPABASE_ANON_KEY
 );
 
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_APP_PASSWORD,
-  },
-});
+let resend = null;
+if (process.env.RESEND_API_KEY) {
+  resend = new Resend(process.env.RESEND_API_KEY);
+}
 
 const OTP_EMAIL = process.env.OTP_RECIPIENT_EMAIL || "crissimon44@gmail.com";
+const FROM_EMAIL = process.env.FROM_EMAIL || "Lumio <onboarding@resend.dev>";
 
 // POST /api/otp/send
 app.post("/api/otp/send", async (req, res) => {
@@ -48,10 +46,14 @@ app.post("/api/otp/send", async (req, res) => {
       return res.status(500).json({ error: "Failed to store OTP", detail: dbError.message });
     }
 
-    // Send email via Gmail / Nodemailer
-    await transporter.sendMail({
-      from: `"Lumio" <${process.env.GMAIL_USER}>`,
-      to: OTP_EMAIL,
+    // Send email via Resend
+    if (!resend) {
+      console.error("RESEND_API_KEY is not set. Email not sent.");
+      return res.status(500).json({ error: "Email service not configured. Please set RESEND_API_KEY." });
+    }
+    const { error: emailError } = await resend.emails.send({
+      from: FROM_EMAIL,
+      to: [OTP_EMAIL],
       subject: "Your Lumio Transfer Verification Code",
       html: `
         <div style="font-family: 'IBM Plex Sans', Arial, sans-serif; max-width: 480px; margin: 0 auto; background: #fff; border-radius: 12px; overflow: hidden; border: 1px solid #e5e7eb;">
@@ -70,6 +72,11 @@ app.post("/api/otp/send", async (req, res) => {
         </div>
       `,
     });
+
+    if (emailError) {
+      console.error("Resend email error:", emailError);
+      return res.status(500).json({ error: "Failed to send email", detail: emailError.message });
+    }
 
     res.json({ success: true, email: OTP_EMAIL });
   } catch (err) {
