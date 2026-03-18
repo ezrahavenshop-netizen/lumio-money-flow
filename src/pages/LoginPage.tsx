@@ -4,25 +4,26 @@ import { motion } from "framer-motion";
 import { Eye, EyeOff, Lock, Shield, Fingerprint } from "lucide-react";
 import LumioLogo from "@/components/LumioLogo";
 import { useApp } from "@/context/AppContext";
+import { supabase } from "@/lib/supabase";
 
-const VALID_EMAIL = "Kyuminlee@hotmail.com";
-const VALID_PASSWORD = "Limitless2019$";
 const ADMIN_EMAIL = "admin@lumiobank.co.uk";
 const ADMIN_PASSWORD = "Lumio@Admin2019";
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const { setIsLoggedIn, setIsAdmin } = useApp();
+  const { setIsLoggedIn, setIsAdmin, setUser, setBalance } = useApp();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [suspended, setSuspended] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(false);
+    setError(null);
+    setSuspended(false);
 
     const emailLower = email.trim().toLowerCase();
 
@@ -35,19 +36,62 @@ const LoginPage: React.FC = () => {
       return;
     }
 
-    const emailMatch = emailLower === VALID_EMAIL.toLowerCase();
-    const passwordMatch = password === VALID_PASSWORD;
+    setLoading(true);
 
-    if (!emailMatch || !passwordMatch) {
-      setError(true);
+    const { data: dbUsers } = await supabase
+      .from("users")
+      .select("*")
+      .ilike("email", emailLower)
+      .eq("password", password)
+      .limit(1);
+
+    if (dbUsers && dbUsers.length > 0) {
+      const dbUser = dbUsers[0];
+      if (dbUser.status === "suspended") {
+        setLoading(false);
+        setSuspended(true);
+        return;
+      }
+      setUser({
+        firstName: dbUser.first_name,
+        lastName: dbUser.last_name,
+        fullName: `${dbUser.first_name} ${dbUser.last_name}`,
+        initials: `${dbUser.first_name?.[0] || ""}${dbUser.last_name?.[0] || ""}`.toUpperCase(),
+        avatarUrl: null,
+        dateOfBirth: dbUser.date_of_birth || "",
+        gender: dbUser.gender || "",
+        maritalStatus: dbUser.marital_status || "",
+        occupation: dbUser.occupation || "",
+        address: dbUser.address || "",
+        phone: dbUser.phone || "",
+        email: dbUser.email,
+        accountNumber: dbUser.account_number || "",
+        accountNumberMasked: dbUser.account_number ? `**** **** ${dbUser.account_number.slice(-4)}` : "",
+        accountType: dbUser.account_type || "Lumio Premier",
+        memberSince: new Date(dbUser.created_at).toLocaleDateString("en-GB", { month: "long", year: "numeric" }),
+        kycVerified: dbUser.kyc_status === "verified",
+      });
+      setBalance(Number(dbUser.balance) || 0);
+      setTimeout(() => {
+        setIsLoggedIn(true);
+        navigate("/dashboard");
+      }, 800);
       return;
     }
 
-    setLoading(true);
-    setTimeout(() => {
-      setIsLoggedIn(true);
-      navigate("/dashboard");
-    }, 1500);
+    if (
+      emailLower === "kyuminlee@hotmail.com" &&
+      password === "Limitless2019$"
+    ) {
+      setTimeout(() => {
+        setIsLoggedIn(true);
+        navigate("/dashboard");
+      }, 800);
+      return;
+    }
+
+    setLoading(false);
+    setError("Invalid email or password. Please try again.");
   };
 
   const fieldClass = (hasError: boolean) =>
@@ -134,10 +178,10 @@ const LoginPage: React.FC = () => {
                 data-testid="input-email"
                 type="email"
                 value={email}
-                onChange={(e) => { setEmail(e.target.value); setError(false); }}
+                onChange={(e) => { setEmail(e.target.value); setError(null); setSuspended(false); }}
                 placeholder=""
                 autoComplete="email"
-                className={fieldClass(error)}
+                className={fieldClass(!!error || suspended)}
               />
             </div>
 
@@ -150,9 +194,9 @@ const LoginPage: React.FC = () => {
                   data-testid="input-password"
                   type={showPassword ? "text" : "password"}
                   value={password}
-                  onChange={(e) => { setPassword(e.target.value); setError(false); }}
+                  onChange={(e) => { setPassword(e.target.value); setError(null); setSuspended(false); }}
                   autoComplete="current-password"
-                  className={`${fieldClass(error)} pr-11`}
+                  className={`${fieldClass(!!error || suspended)} pr-11`}
                 />
                 <button
                   type="button"
@@ -170,8 +214,22 @@ const LoginPage: React.FC = () => {
                 animate={{ opacity: 1, y: 0 }}
                 className="text-sm text-red-500 font-medium"
               >
-                Invalid email or password. Please try again.
+                {error}
               </motion.p>
+            )}
+
+            {suspended && (
+              <motion.div
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm"
+              >
+                <p className="font-semibold text-red-700 mb-1">Account Suspended</p>
+                <p className="text-red-600">
+                  Your account has been suspended. Contact{" "}
+                  <span className="font-medium">support@lumiobank.co.uk</span>
+                </p>
+              </motion.div>
             )}
 
             <div className="flex items-center justify-between text-sm">
