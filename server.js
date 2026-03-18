@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
+import nodemailer from "nodemailer";
 import { createClient } from "@supabase/supabase-js";
-import { Resend } from "resend";
 
 const app = express();
 app.use(cors());
@@ -12,17 +12,29 @@ const supabase = createClient(
   process.env.VITE_SUPABASE_ANON_KEY
 );
 
-let resend = null;
-if (process.env.RESEND_API_KEY) {
-  resend = new Resend(process.env.RESEND_API_KEY);
+const OTP_EMAIL = process.env.OTP_RECIPIENT_EMAIL || "crissimon44@gmail.com";
+const GMAIL_USER = process.env.GMAIL_USER;
+const GMAIL_PASS = process.env.GMAIL_APP_PASSWORD;
+
+if (!GMAIL_USER || !GMAIL_PASS) {
+  console.warn("⚠️  GMAIL_USER or GMAIL_APP_PASSWORD is not set — OTP emails will fail.");
 }
 
-const OTP_EMAIL = process.env.OTP_RECIPIENT_EMAIL || "crissimon44@gmail.com";
-const FROM_EMAIL = process.env.FROM_EMAIL || "Lumio <onboarding@resend.dev>";
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: GMAIL_USER,
+    pass: GMAIL_PASS,
+  },
+});
 
 // POST /api/otp/send
 app.post("/api/otp/send", async (req, res) => {
   try {
+    if (!GMAIL_USER || !GMAIL_PASS) {
+      return res.status(500).json({ error: "Email service not configured. GMAIL_USER and GMAIL_APP_PASSWORD must be set." });
+    }
+
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = new Date(Date.now() + 2 * 60 * 1000).toISOString();
 
@@ -46,17 +58,13 @@ app.post("/api/otp/send", async (req, res) => {
       return res.status(500).json({ error: "Failed to store OTP", detail: dbError.message });
     }
 
-    // Send email via Resend
-    if (!resend) {
-      console.error("RESEND_API_KEY is not set. Email not sent.");
-      return res.status(500).json({ error: "Email service not configured. Please set RESEND_API_KEY." });
-    }
-    const { error: emailError } = await resend.emails.send({
-      from: FROM_EMAIL,
-      to: [OTP_EMAIL],
+    // Send via Gmail
+    await transporter.sendMail({
+      from: `"Lumio Bank" <${GMAIL_USER}>`,
+      to: OTP_EMAIL,
       subject: "Your Lumio Transfer Verification Code",
       html: `
-        <div style="font-family: 'IBM Plex Sans', Arial, sans-serif; max-width: 480px; margin: 0 auto; background: #fff; border-radius: 12px; overflow: hidden; border: 1px solid #e5e7eb;">
+        <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; background: #fff; border-radius: 12px; overflow: hidden; border: 1px solid #e5e7eb;">
           <div style="background: #0A1628; padding: 32px 40px;">
             <h1 style="font-family: Georgia, serif; color: #C9963A; margin: 0; font-size: 24px; letter-spacing: -0.5px;">Lumio</h1>
           </div>
@@ -73,14 +81,10 @@ app.post("/api/otp/send", async (req, res) => {
       `,
     });
 
-    if (emailError) {
-      console.error("Resend email error:", emailError);
-      return res.status(500).json({ error: "Failed to send email", detail: emailError.message });
-    }
-
+    console.log(`OTP sent to ${OTP_EMAIL}`);
     res.json({ success: true, email: OTP_EMAIL });
   } catch (err) {
-    console.error("OTP send error:", err);
+    console.error("OTP send error:", err.message);
     res.status(500).json({ error: "Failed to send email", detail: err.message });
   }
 });
