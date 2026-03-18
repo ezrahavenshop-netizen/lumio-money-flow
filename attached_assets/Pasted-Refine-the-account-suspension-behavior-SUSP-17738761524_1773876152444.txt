@@ -1,0 +1,92 @@
+Refine the account suspension behavior:
+
+===================================================
+SUSPENSION WHILE USER IS ACTIVE IN APP
+===================================================
+
+When admin suspends a user while they are
+currently logged in and active in the app:
+
+DO NOT:
+  Log the user out
+  Refresh the page
+  Redirect anywhere
+  Interrupt their current session
+
+DO:
+  Supabase real-time subscription detects
+  users.status changed to 'suspended'
+  instantly without refresh
+
+  Show a toast popup immediately:
+    Red background, white text
+    Cannot auto-dismiss
+    Has a close (X) button
+    Message:
+    "⚠ Your account has been suspended.
+    For more information please contact
+    our support team at
+    support@lumiobank.co.uk
+    We are here to help."
+
+  Show fixed red banner at top of every page:
+    "⚠ Account Suspended — Contact
+    support@lumiobank.co.uk for assistance."
+    Cannot be dismissed
+    Stays for entire remainder of session
+
+  Block transfer page immediately:
+    If user is currently on /transfer
+    hide form instantly via subscription
+    Show: "Your account is suspended.
+    You cannot make transfers at this time."
+    If user navigates to /transfer
+    same blocked state shown
+
+  User can still:
+    View dashboard
+    View transaction history
+    View profile
+    Browse all other pages freely
+
+  User cannot:
+    Make any transfer
+    Initiate any transaction
+
+===================================================
+SUSPENSION AFTER SESSION ENDS
+===================================================
+
+When suspended user logs out or
+closes the browser and tries to return:
+
+  Login page checks users.status from Supabase
+  on every login attempt
+
+  If status === 'suspended':
+    Block login completely
+    Do not navigate to dashboard
+    Show message below login form:
+      Red bordered alert box
+      "Your account has been suspended.
+      Please contact support@lumiobank.co.uk
+      for assistance."
+    Login button does nothing
+    Fields stay visible but submission blocked
+
+===================================================
+UNSUSPENSION
+===================================================
+
+When admin unsuspends while user is active:
+  Supabase real-time detects status: active
+  Red banner disappears instantly
+  Toast fires: "Your account has been
+  reactivated. You can now make transfers."
+  Transfer page unlocks instantly
+  No refresh needed
+
+When unsuspended user tries to log in:
+  Login works normally
+  No suspension message shown
+  Redirects to dashboard as usual

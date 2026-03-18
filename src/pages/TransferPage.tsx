@@ -418,8 +418,8 @@ const TransferPage: React.FC = () => {
             </div>
             <h2 className="font-serif text-2xl text-foreground mb-2">Transfers Unavailable</h2>
             <p className="text-muted-foreground text-sm">
-              Your account is currently suspended.<br />
-              You are unable to make transfers at this time.<br />
+              Your account is suspended.<br />
+              You cannot make transfers at this time.<br />
               Please contact{" "}
               <a href="mailto:support@lumiobank.co.uk" className="text-lumio-accent">support@lumiobank.co.uk</a>
             </p>

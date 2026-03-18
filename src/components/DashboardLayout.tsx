@@ -56,7 +56,7 @@ const DashboardLayout: React.FC = () => {
             }
             if (updated.status === "active" && prev === "suspended") {
               suspendedToastShown.current = false;
-              toast.success("Your account has been reactivated.", { duration: 6000 });
+              toast.success("Your account has been reactivated. You can now make transfers.", { duration: Infinity, closeButton: true });
             }
           }
         }
@@ -152,12 +152,12 @@ const DashboardLayout: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-lumio-surface">
-      {/* Suspension Banner */}
+      {/* Suspension Banner — non-dismissable, persists entire session */}
       {userStatus === "suspended" && (
-        <div className="w-full bg-red-600 text-white text-sm py-2.5 px-4 flex items-center justify-center gap-2 z-50 flex-shrink-0">
+        <div className="w-full bg-red-600 text-white text-sm py-2.5 px-4 flex items-center justify-center gap-2 z-50 flex-shrink-0 select-none">
           <AlertTriangle size={15} className="flex-shrink-0" />
           <span>
-            <strong>Account Suspended</strong> — Your account is currently suspended. Contact{" "}
+            ⚠ <strong>Account Suspended</strong> — Contact{" "}
             <a href="mailto:support@lumiobank.co.uk" className="underline font-semibold">
               support@lumiobank.co.uk
             </a>{" "}

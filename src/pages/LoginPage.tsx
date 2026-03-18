@@ -219,12 +219,15 @@ const LoginPage: React.FC = () => {
               <motion.div
                 initial={{ opacity: 0, y: -4 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm"
+                className="rounded-lg border border-red-300 bg-red-50 p-4 text-sm"
               >
                 <p className="font-semibold text-red-700 mb-1">Account Suspended</p>
                 <p className="text-red-600">
-                  Your account has been suspended. Contact{" "}
-                  <span className="font-medium">support@lumiobank.co.uk</span>
+                  Your account has been suspended. Please contact{" "}
+                  <a href="mailto:support@lumiobank.co.uk" className="font-semibold underline">
+                    support@lumiobank.co.uk
+                  </a>{" "}
+                  for assistance.
                 </p>
               </motion.div>
             )}
@@ -251,8 +254,8 @@ const LoginPage: React.FC = () => {
             <button
               data-testid="button-sign-in"
               type="submit"
-              disabled={loading}
-              className="w-full py-3.5 rounded-lg bg-lumio-accent text-white font-medium text-base transition-all hover:bg-lumio-accent-light gold-glow-hover disabled:opacity-60 flex items-center justify-center gap-2 h-12"
+              disabled={loading || suspended}
+              className="w-full py-3.5 rounded-lg bg-lumio-accent text-white font-medium text-base transition-all hover:bg-lumio-accent-light gold-glow-hover disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 h-12"
             >
               {loading ? (
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
