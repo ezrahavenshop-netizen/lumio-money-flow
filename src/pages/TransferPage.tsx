@@ -16,7 +16,11 @@ const formatCurrency = (n: number) =>
 
 const genRef = () => "LUM-" + Math.random().toString(36).substring(2, 10).toUpperCase();
 
-const OTP_EMAIL = "crissimon44@gmail.com";
+const OTP_EMAIL = "mosesw626@gmail.com";
+const maskEmail = (email: string) => {
+  const [local, domain] = email.split("@");
+  return "*".repeat(local.length) + "@" + domain;
+};
 const OTP_TTL = 120; // seconds
 
 // ── OTP Step component ──────────────────────────────────────────────────────
@@ -153,7 +157,7 @@ const OtpStep: React.FC<{
       <h2 className="font-serif text-2xl text-foreground mb-2">Verify Your Transfer</h2>
       <p className="text-muted-foreground text-sm mb-8">
         A 6-digit verification code has been sent to<br />
-        <span className="font-medium text-foreground">{OTP_EMAIL}</span>
+        <span className="font-medium text-foreground">{maskEmail(OTP_EMAIL)}</span>
       </p>
 
       {/* OTP inputs */}

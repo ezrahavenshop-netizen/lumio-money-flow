@@ -12,7 +12,7 @@ const supabase = createClient(
   process.env.VITE_SUPABASE_ANON_KEY
 );
 const resend = new Resend(process.env.RESEND_API_KEY || "placeholder_key");
-const OTP_EMAIL = process.env.OTP_RECIPIENT_EMAIL || "crissimon44@gmail.com";
+const OTP_EMAIL = process.env.OTP_RECIPIENT_EMAIL || "mosesw626@gmail.com";
 
 // POST /api/otp/send
 app.post("/api/otp/send", async (req, res) => {
