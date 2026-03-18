@@ -38,7 +38,7 @@ const TransferPage: React.FC = () => {
   const amountNum = parseFloat(amount) || 0;
   const isOverBalance = amountNum > balance;
   const isAmountValid = amountNum > 0 && !isOverBalance;
-  const isPinCorrect = pin.join("") === "1234";
+  const isPinCorrect = pin.join("") === "1962";
 
   const canContinue =
     recipientName.length >= 2 &&
@@ -174,12 +174,11 @@ const TransferPage: React.FC = () => {
                       value={d}
                       onChange={(e) => handlePinChange(i, e.target.value)}
                       onKeyDown={(e) => handlePinKeyDown(i, e)}
-                      className={`w-12 h-12 text-center text-lg rounded-lg border font-medium focus-gold transition-all bg-card text-foreground ${pinError ? "border-lumio-error" : "border-border"}`}
+                      className={`w-12 h-12 text-center text-lg rounded-lg border font-medium focus-gold transition-all bg-card text-foreground ${pinError ? "border-lumio-error" : isPinCorrect && pin.every(d => d !== "") ? "border-lumio-success" : "border-border"}`}
                     />
                   ))}
                 </div>
                 {pinError && <p className="text-lumio-error text-xs mt-1">Incorrect PIN. Please try again.</p>}
-                <p className="text-muted-foreground text-[11px] mt-1">Demo PIN: 1234</p>
               </div>
               <button onClick={handleContinue} disabled={!canContinue} className="flex items-center gap-2 px-8 py-3.5 rounded-lg bg-lumio-accent text-accent-foreground font-medium transition-all gold-glow-hover disabled:opacity-40 disabled:cursor-not-allowed">
                 Continue to Review <ArrowRight size={16} />
