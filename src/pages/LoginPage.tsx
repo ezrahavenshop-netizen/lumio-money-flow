@@ -267,9 +267,9 @@ const LoginPage: React.FC = () => {
           </form>
 
           <p className="text-center text-sm text-muted-foreground mt-8">
-            New to Lumio?{" "}
-            <Link to="/" className="text-lumio-accent hover:text-lumio-accent-light transition-colors">
-              Open an account →
+            Don't have an account?{" "}
+            <Link to="/register" className="text-lumio-accent hover:text-lumio-accent-light transition-colors font-medium">
+              Register →
             </Link>
           </p>
         </motion.div>

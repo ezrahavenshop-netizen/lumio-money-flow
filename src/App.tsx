@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppProvider, useApp } from "@/context/AppContext";
 import Index from "./pages/Index";
 import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/RegisterPage";
 import DashboardLayout from "./components/DashboardLayout";
 import DashboardPage from "./pages/DashboardPage";
 import TransferPage from "./pages/TransferPage";
@@ -47,6 +48,7 @@ const AppRoutes = () => (
     <Routes>
       <Route path="/" element={<Index />} />
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
 
       <Route element={<UserRoute><DashboardLayout /></UserRoute>}>
         <Route path="/dashboard" element={<DashboardPage />} />

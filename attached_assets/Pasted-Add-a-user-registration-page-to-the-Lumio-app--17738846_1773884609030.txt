@@ -1,0 +1,126 @@
+Add a user registration page to the Lumio app.
+
+===================================================
+ROUTE
+===================================================
+
+/register — accessible to everyone
+"Open an Account" button on landing page
+→ navigates to /register
+
+Already logged in → redirect to /dashboard
+Already admin → redirect to /admin
+
+===================================================
+REGISTER PAGE LAYOUT
+===================================================
+
+Split screen same style as login page:
+Left panel: Lumio branding + security badges
+Right panel: multi-step registration form
+
+===================================================
+MULTI-STEP FORM (4 steps)
+===================================================
+
+Progress stepper at top:
+[1 Personal] → [2 Contact] → [3 Security] → [4 Done]
+
+——— STEP 1: Personal Details ———
+  First Name *
+  Last Name *
+  Date of Birth * (date picker)
+  Gender * (Male / Female / Other)
+  Marital Status * (Single / Married / Other)
+  Occupation *
+
+  "Continue →" button (gold)
+  Validates all fields before advancing
+
+——— STEP 2: Contact Details ———
+  Home Address *
+  Email Address *
+    Validation: valid email format
+    Check Supabase — if email already exists:
+    "An account with this email already exists."
+  Phone Number *
+
+  "← Back" | "Continue →"
+
+——— STEP 3: Security ———
+  Password *
+    Min 8 characters
+    Must contain uppercase, number,
+    special character
+    Strength indicator bar below input
+    (Weak / Fair / Strong / Very Strong)
+  Confirm Password *
+    Must match password
+  Transfer PIN * (4-box OTP style, numeric)
+  Confirm PIN * (must match)
+
+  "← Back" | "Create My Account →" (gold)
+
+——— STEP 4: Success ———
+  Animated checkmark (gold → green)
+  Heading: "Welcome to Lumio"
+  "Your account has been created successfully."
+  Account Number: [auto-generated 8 digits]
+  "Go to Dashboard →" button (gold)
+
+===================================================
+ON SUCCESSFUL REGISTRATION
+===================================================
+
+Save to Supabase users table:
+  first_name, last_name, email, password,
+  phone, date_of_birth, gender,
+  marital_status, occupation, address,
+  account_number: auto-generated 8 digits,
+  account_type: "Lumio Standard",
+  balance: 0.00,
+  transfer_pin: [entered PIN],
+  kyc_verified: false,
+  status: active,
+  member_since: current month and year,
+  created_at: now()
+
+Redirect to /dashboard immediately
+User dashboard shows:
+  Their name on bank card
+  Balance: €0.00
+  Account Type: Lumio Standard
+  KYC Status: ⏳ Pending Verification
+  Empty transaction history
+
+Admin side updates instantly:
+  New user appears in /admin/users table
+  Alert fires: "New user registered — [full name]"
+  Admin bell badge increments
+
+===================================================
+VALIDATION RULES
+===================================================
+
+All fields required
+Email must be unique in Supabase
+Password min 8 chars, 1 uppercase,
+1 number, 1 special character
+Confirm password must match
+PIN must be exactly 4 digits
+Confirm PIN must match
+On any error: red border + inline error message
+On success: green border + check icon
+
+===================================================
+NAVIGATION
+===================================================
+
+Login page bottom:
+"Don't have an account? Register →" → /register
+
+Register page bottom:
+"Already have an account? Sign In →" → /login
+
+Landing page:
+"Open an Account" button → /register

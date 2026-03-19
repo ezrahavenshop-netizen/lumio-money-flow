@@ -46,7 +46,7 @@ const Navbar = () => {
           <Link to="/login" className={`text-sm font-medium px-4 py-2 rounded-lg border transition-all ${scrolled ? "border-lumio-primary text-lumio-primary hover:bg-lumio-primary hover:text-primary-foreground" : "border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10"}`}>
             Log In
           </Link>
-          <Link to="/login" className="text-sm font-medium px-4 py-2 rounded-lg bg-lumio-accent text-accent-foreground hover:bg-lumio-accent-light transition-all gold-glow-hover">
+          <Link to="/register" className="text-sm font-medium px-4 py-2 rounded-lg bg-lumio-accent text-accent-foreground hover:bg-lumio-accent-light transition-all gold-glow-hover">
             Open Account
           </Link>
         </div>
@@ -83,7 +83,7 @@ const HeroSection = () =>
           Lumio gives you full control of your finances with instant transfers, real-time notifications, and the security of a fully regulated UK bank.
         </motion.p>
         <motion.div variants={fadeUp} className="flex flex-wrap items-center gap-4 mb-10">
-          <Link to="/login" className="inline-flex items-center gap-2 px-8 py-4 rounded-lg bg-lumio-accent text-accent-foreground font-medium text-base transition-all hover:bg-lumio-accent-light gold-glow-hover">
+          <Link to="/register" className="inline-flex items-center gap-2 px-8 py-4 rounded-lg bg-lumio-accent text-accent-foreground font-medium text-base transition-all hover:bg-lumio-accent-light gold-glow-hover">
             Open an Account
           </Link>
           <a href="#features" className="inline-flex items-center gap-2 text-primary-foreground/80 hover:text-primary-foreground text-sm font-medium transition-colors">
