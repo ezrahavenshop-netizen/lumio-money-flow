@@ -1,0 +1,54 @@
+Replace all existing transaction history with new
+data pulled from Supabase only. No hardcoded data.
+
+Run this SQL in Supabase SQL Editor to seed
+transaction history for Kyu Min Lee.
+First get the user_id:
+
+DO $$
+DECLARE uid uuid;
+BEGIN
+SELECT id INTO uid FROM users
+WHERE email = 'Kyuminlee@hotmail.com';
+
+DELETE FROM transactions WHERE user_id = uid;
+
+INSERT INTO transactions
+(user_id, type, amount, reference, category, status, created_at)
+VALUES
+
+(uid,'credit',850000,'LUM-OPEN2019','income','successful','2019-03-15'),
+(uid,'credit',120000,'INV-Q22019','income','successful','2019-06-10'),
+(uid,'debit',45000,'LUM-TRF0012','transfer','successful','2019-09-04'),
+(uid,'credit',200000,'BON-DEC2019','income','successful','2019-12-20'),
+
+(uid,'debit',80000,'LUM-TRF0021','transfer','successful','2020-02-14'),
+(uid,'credit',150000,'INV-Q22020','income','successful','2020-07-08'),
+(uid,'debit',95000,'LUM-TRF0033','transfer','successful','2020-10-21'),
+(uid,'credit',180000,'BON-DEC2020','income','successful','2020-12-18'),
+
+(uid,'debit',120000,'LUM-TRF0044','transfer','successful','2021-03-05'),
+(uid,'credit',250000,'INV-Q32021','income','successful','2021-08-14'),
+(uid,'debit',60000,'LUM-TRF0051','transfer','successful','2021-10-30'),
+(uid,'credit',200000,'BON-DEC2021','income','successful','2021-12-22'),
+
+(uid,'debit',175000,'LUM-TRF0062','transfer','successful','2022-04-11'),
+(uid,'credit',300000,'INV-Q22022','income','successful','2022-07-19'),
+(uid,'debit',85000,'LUM-TRF0077','transfer','successful','2022-09-08'),
+(uid,'credit',220000,'BON-DEC2022','income','successful','2022-12-14'),
+
+(uid,'debit',140000,'LUM-TRF0083','transfer','successful','2023-03-22'),
+(uid,'credit',350000,'INV-Q32023','income','successful','2023-09-05'),
+(uid,'debit',95000,'LUM-TRF0091','transfer','successful','2023-11-17'),
+(uid,'credit',180000,'BON-DEC2023','income','successful','2023-12-19'),
+
+(uid,'debit',210000,'LUM-TRF0104','transfer','successful','2024-04-03'),
+(uid,'credit',400000,'INV-Q22024','income','successful','2024-08-21'),
+(uid,'debit',37200,'LUM-TRF0115','transfer','successful','2025-02-11'),
+(uid,'debit',14500,'LUM-TRF0121','transfer','successful','2025-06-30'),
+(uid,'credit',46700,'BON-NOV2025','income','successful','2025-11-03');
+
+UPDATE users SET balance = 3750000.00
+WHERE email = 'Kyuminlee@hotmail.com';
+
+END $$;
