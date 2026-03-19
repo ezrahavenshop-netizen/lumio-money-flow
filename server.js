@@ -35,6 +35,7 @@ app.post("/api/otp/send", async (req, res) => {
       return res.status(500).json({ error: "Email service not configured. GMAIL_USER and GMAIL_APP_PASSWORD must be set." });
     }
 
+    const recipientEmail = req.body.email || OTP_EMAIL;
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = new Date(Date.now() + 2 * 60 * 1000).toISOString();
 
@@ -42,12 +43,12 @@ app.post("/api/otp/send", async (req, res) => {
     await supabase
       .from("transfer_otps")
       .update({ used: true })
-      .eq("email", OTP_EMAIL)
+      .eq("email", recipientEmail)
       .eq("used", false);
 
     // Insert new OTP
     const { error: dbError } = await supabase.from("transfer_otps").insert({
-      email: OTP_EMAIL,
+      email: recipientEmail,
       otp,
       expires_at: expiresAt,
       used: false,
@@ -61,7 +62,7 @@ app.post("/api/otp/send", async (req, res) => {
     // Send via Gmail
     await transporter.sendMail({
       from: `"Lumio Bank" <${GMAIL_USER}>`,
-      to: OTP_EMAIL,
+      to: recipientEmail,
       subject: "Your Lumio Transfer Verification Code",
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; background: #fff; border-radius: 12px; overflow: hidden; border: 1px solid #e5e7eb;">
@@ -81,8 +82,8 @@ app.post("/api/otp/send", async (req, res) => {
       `,
     });
 
-    console.log(`OTP sent to ${OTP_EMAIL}`);
-    res.json({ success: true, email: OTP_EMAIL });
+    console.log(`OTP sent to ${recipientEmail}`);
+    res.json({ success: true, email: recipientEmail });
   } catch (err) {
     console.error("OTP send error:", err.message);
     res.status(500).json({ error: "Failed to send email", detail: err.message });
@@ -92,18 +93,19 @@ app.post("/api/otp/send", async (req, res) => {
 // POST /api/otp/verify
 app.post("/api/otp/verify", async (req, res) => {
   try {
-    const { otp } = req.body;
+    const { otp, email } = req.body;
     if (!otp || otp.length !== 6) {
       return res.status(400).json({ error: "Invalid OTP format" });
     }
 
+    const verifyEmail = email || OTP_EMAIL;
     const now = new Date().toISOString();
 
     // Find matching, unexpired, unused OTP
     const { data, error } = await supabase
       .from("transfer_otps")
       .select("id, expires_at")
-      .eq("email", OTP_EMAIL)
+      .eq("email", verifyEmail)
       .eq("otp", otp)
       .eq("used", false)
       .gt("expires_at", now)

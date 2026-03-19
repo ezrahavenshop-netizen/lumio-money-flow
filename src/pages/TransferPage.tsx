@@ -59,7 +59,7 @@ const OtpStep: React.FC<{
   const sendOtp = async () => {
     setSending(true);
     try {
-      const res = await fetch("/api/otp/send", { method: "POST", headers: { "Content-Type": "application/json" } });
+      const res = await fetch("/api/otp/send", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: otpEmail }) });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to send OTP");
       startTimer();
@@ -114,7 +114,7 @@ const OtpStep: React.FC<{
       const res = await fetch("/api/otp/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ otp: code }),
+        body: JSON.stringify({ otp: code, email: otpEmail }),
       });
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error("invalid");
