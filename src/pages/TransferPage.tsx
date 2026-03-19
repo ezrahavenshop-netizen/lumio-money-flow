@@ -287,14 +287,6 @@ const TransferPage: React.FC = () => {
     return () => { supabase.removeChannel(userChannel); };
   }, [userId]);
 
-  // Fetch OTP email
-  useEffect(() => {
-    if (userId) {
-      supabase.from("users").select("email").eq("id", userId).single().then(({ data }) => {
-        if (data?.email) setOtpEmail(data.email);
-      });
-    }
-  }, [userId]);
 
   const [recipientName, setRecipientName] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
