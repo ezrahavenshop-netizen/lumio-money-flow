@@ -1,0 +1,9 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "rewrites": [
+    { "source": "/api/otp/send", "destination": "/api/otp/send" },
+    { "source": "/api/otp/verify", "destination": "/api/otp/verify" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
