@@ -41,7 +41,7 @@ const emptyForm = {
   first_name: "", last_name: "", email: "", phone: "",
   date_of_birth: "", gender: "", marital_status: "", occupation: "",
   address: "", account_type: "Lumio Premier", opening_balance: "",
-  transfer_pin: "", password: "", member_since: "",
+  transfer_pin: "", password: "", member_since: "", edit_balance: "",
 };
 
 const genAccountNumber = () => String(Math.floor(10000000 + Math.random() * 90000000));
@@ -164,7 +164,7 @@ const AdminUsers: React.FC = () => {
       occupation: u.occupation || "", address: u.address || "",
       account_type: u.account_type || "Lumio Premier",
       opening_balance: "", transfer_pin: u.transfer_pin || "", password: u.password || "",
-      member_since: memberSinceValue,
+      member_since: memberSinceValue, edit_balance: String(u.balance ?? ""),
     });
     setModal("edit");
   };
@@ -218,6 +218,7 @@ const AdminUsers: React.FC = () => {
       occupation: form.occupation, address: form.address,
       account_type: form.account_type, transfer_pin: form.transfer_pin,
       password: form.password,
+      ...(form.edit_balance !== "" && { balance: parseFloat(form.edit_balance) }),
     };
     if (form.member_since) {
       // Set created_at to the 1st of the chosen month/year at midnight UTC
@@ -337,17 +338,31 @@ const AdminUsers: React.FC = () => {
         <Field label="Opening Balance (£)" name="opening_balance" value={form.opening_balance} onChange={handleFormChange} type="number" />
       )}
       {modal === "edit" && (
-        <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">Member Since</label>
-          <input
-            name="member_since"
-            type="month"
-            value={form.member_since}
-            onChange={handleFormChange}
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-lumio-accent/30"
-          />
-          <p className="text-[10px] text-gray-400 mt-1">Controls the "Member Since" date shown on the user's dashboard.</p>
-        </div>
+        <>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Balance (£)</label>
+            <input
+              name="edit_balance"
+              type="number"
+              step="0.01"
+              value={form.edit_balance}
+              onChange={handleFormChange}
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-lumio-accent/30"
+            />
+            <p className="text-[10px] text-gray-400 mt-1">Updates the user's current account balance directly.</p>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Member Since</label>
+            <input
+              name="member_since"
+              type="month"
+              value={form.member_since}
+              onChange={handleFormChange}
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-lumio-accent/30"
+            />
+            <p className="text-[10px] text-gray-400 mt-1">Controls the "Member Since" date shown on the user's dashboard.</p>
+          </div>
+        </>
       )}
       <Field label="Transfer PIN" name="transfer_pin" value={form.transfer_pin} onChange={handleFormChange} />
       <Field label="Password" name="password" value={form.password} onChange={handleFormChange} type="password" />

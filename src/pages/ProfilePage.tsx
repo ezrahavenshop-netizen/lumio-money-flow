@@ -5,7 +5,7 @@ import { useApp } from "@/context/AppContext";
 import { toast } from "sonner";
 
 const ProfilePage: React.FC = () => {
-  const { user, setUser } = useApp();
+  const { user, setUser, userId } = useApp();
   const fileRef = useRef<HTMLInputElement>(null);
   const [activeTab, setActiveTab] = useState<"personal" | "account" | "security">("personal");
   const [showFullAccount, setShowFullAccount] = useState(false);
@@ -21,7 +21,9 @@ const ProfilePage: React.FC = () => {
     if (!file.type.startsWith("image/")) { toast.error("Please upload a valid image file (JPG, PNG, WebP)"); return; }
     const reader = new FileReader();
     reader.onload = () => {
-      setUser((prev) => ({ ...prev, avatarUrl: reader.result as string }));
+      const dataUrl = reader.result as string;
+      setUser((prev) => ({ ...prev, avatarUrl: dataUrl }));
+      if (userId) localStorage.setItem(`lumio_avatar_${userId}`, dataUrl);
       toast.success("Profile photo updated ✓");
     };
     reader.readAsDataURL(file);
@@ -29,6 +31,7 @@ const ProfilePage: React.FC = () => {
 
   const removePhoto = () => {
     setUser((prev) => ({ ...prev, avatarUrl: null }));
+    if (userId) localStorage.removeItem(`lumio_avatar_${userId}`);
     toast("Profile photo removed");
   };
 

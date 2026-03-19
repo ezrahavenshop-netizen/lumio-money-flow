@@ -7,6 +7,22 @@ import { useApp } from "@/context/AppContext";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 
+// Inject Chatway widget script once per session
+function useChatwayWidget() {
+  useEffect(() => {
+    if (document.getElementById("chatway")) return;
+    const script = document.createElement("script");
+    script.id = "chatway";
+    script.src = "https://cdn.chatway.app/widget.js?id=P0qAHkKWPpyX";
+    script.async = true;
+    document.body.appendChild(script);
+    return () => {
+      const existing = document.getElementById("chatway");
+      if (existing) existing.remove();
+    };
+  }, []);
+}
+
 const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
   { label: "Transfer", icon: ArrowRightLeft, path: "/transfer" },
@@ -16,6 +32,7 @@ const navItems = [
 ];
 
 const DashboardLayout: React.FC = () => {
+  useChatwayWidget();
   const location = useLocation();
   const navigate = useNavigate();
   const { user, userId, userStatus, setUserStatus, setBalance, setIsLoggedIn, notifications, markAllRead } = useApp();

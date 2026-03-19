@@ -53,12 +53,13 @@ const LoginPage: React.FC = () => {
         return;
       }
       const fullName = `${dbUser.first_name} ${dbUser.last_name}`;
+      const savedAvatar = localStorage.getItem(`lumio_avatar_${dbUser.id}`) || null;
       setUser({
         firstName: dbUser.first_name,
         lastName: dbUser.last_name,
         fullName,
         initials: `${dbUser.first_name?.[0] || ""}${dbUser.last_name?.[0] || ""}`.toUpperCase(),
-        avatarUrl: null,
+        avatarUrl: savedAvatar,
         dateOfBirth: dbUser.date_of_birth || "",
         gender: dbUser.gender || "",
         maritalStatus: dbUser.marital_status || "",
