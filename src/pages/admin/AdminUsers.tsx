@@ -248,7 +248,7 @@ const AdminUsers: React.FC = () => {
       supabase.from("transactions").insert({
         user_id: selected.id, user_name: fullName,
         type: "credit", amount, status: "successful",
-        reference: ref, category: "admin credit",
+        reference: ref, category: "income",
         narration: creditNarration,
       }),
     ]);

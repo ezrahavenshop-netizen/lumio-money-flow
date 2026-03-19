@@ -23,6 +23,8 @@ const categoryIcons: Record<string, React.ReactNode> = {
   "admin credit": <ArrowDownLeft size={14} className="text-lumio-success" />,
 };
 
+const displayCategory = (cat: string) => cat === "admin credit" ? "income" : cat;
+
 interface TxRow {
   id: string;
   created_at: string;
@@ -82,6 +84,7 @@ const HistoryPage: React.FC = () => {
     }
     if (filter === "credits") result = result.filter((t) => t.type === "credit");
     else if (filter === "debits") result = result.filter((t) => t.type === "debit");
+    else if (filter === "income") result = result.filter((t) => t.category === "income" || t.category === "admin credit");
     else if (filter !== "all") result = result.filter((t) => t.category === filter);
 
     if (sort === "newest") result.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
@@ -97,7 +100,7 @@ const HistoryPage: React.FC = () => {
   const totalCredits = transactions.filter((t) => t.type === "credit").reduce((s, t) => s + t.amount, 0);
   const totalDebits = transactions.filter((t) => t.type === "debit").reduce((s, t) => s + t.amount, 0);
 
-  const filters = ["all", "credits", "debits", "transfer", "income", "housing", "admin credit"];
+  const filters = ["all", "credits", "debits", "transfer", "income", "housing"];
 
   if (loading) {
     return (
@@ -189,7 +192,7 @@ const HistoryPage: React.FC = () => {
                     </td>
                     <td className="px-6">
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted text-xs font-medium capitalize">
-                        {categoryIcons[t.category] || <ArrowRightLeft size={14} className="text-lumio-primary" />} {t.category}
+                        {categoryIcons[t.category] || <ArrowRightLeft size={14} className="text-lumio-primary" />} {displayCategory(t.category)}
                       </span>
                     </td>
                     <td className="px-6 font-mono text-xs text-muted-foreground">{t.reference}</td>
@@ -232,7 +235,7 @@ const HistoryPage: React.FC = () => {
                 <div className="flex items-center gap-3">
                   <span className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">{categoryIcons[t.category]}</span>
                   <div>
-                    <p className="text-sm font-medium text-foreground capitalize">{t.category}</p>
+                    <p className="text-sm font-medium text-foreground capitalize">{displayCategory(t.category)}</p>
                     <p className="text-xs text-muted-foreground">{date}</p>
                   </div>
                 </div>
