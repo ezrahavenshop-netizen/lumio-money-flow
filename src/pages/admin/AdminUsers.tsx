@@ -41,7 +41,7 @@ const emptyForm = {
   first_name: "", last_name: "", email: "", phone: "",
   date_of_birth: "", gender: "", marital_status: "", occupation: "",
   address: "", account_type: "Lumio Premier", opening_balance: "",
-  transfer_pin: "", password: "",
+  transfer_pin: "", password: "", member_since: "",
 };
 
 const genAccountNumber = () => String(Math.floor(10000000 + Math.random() * 90000000));
@@ -154,6 +154,9 @@ const AdminUsers: React.FC = () => {
 
   const openEdit = (u: User) => {
     setSelected(u);
+    // Format created_at as YYYY-MM for the month input
+    const createdDate = new Date(u.created_at);
+    const memberSinceValue = `${createdDate.getFullYear()}-${String(createdDate.getMonth() + 1).padStart(2, "0")}`;
     setForm({
       first_name: u.first_name, last_name: u.last_name, email: u.email,
       phone: u.phone || "", date_of_birth: u.date_of_birth || "",
@@ -161,6 +164,7 @@ const AdminUsers: React.FC = () => {
       occupation: u.occupation || "", address: u.address || "",
       account_type: u.account_type || "Lumio Premier",
       opening_balance: "", transfer_pin: u.transfer_pin || "", password: u.password || "",
+      member_since: memberSinceValue,
     });
     setModal("edit");
   };
@@ -205,14 +209,22 @@ const AdminUsers: React.FC = () => {
     if (!selected) return;
     setSaving(true);
     const fullName = `${form.first_name} ${form.last_name}`;
-    const { error } = await supabase.from("users").update({
+
+    // Build update payload — include created_at if member_since was changed
+    const updatePayload: Record<string, unknown> = {
       first_name: form.first_name, last_name: form.last_name,
       email: form.email, phone: form.phone, date_of_birth: form.date_of_birth,
       gender: form.gender, marital_status: form.marital_status,
       occupation: form.occupation, address: form.address,
       account_type: form.account_type, transfer_pin: form.transfer_pin,
       password: form.password,
-    }).eq("id", selected.id);
+    };
+    if (form.member_since) {
+      // Set created_at to the 1st of the chosen month/year at midnight UTC
+      updatePayload.created_at = new Date(`${form.member_since}-01T00:00:00.000Z`).toISOString();
+    }
+
+    const { error } = await supabase.from("users").update(updatePayload).eq("id", selected.id);
     setSaving(false);
     if (error) { toast.error("Failed to update user."); return; }
     await addAlert("user_updated", `User ${fullName} updated`);
@@ -323,6 +335,19 @@ const AdminUsers: React.FC = () => {
       <Field label="Account Type" name="account_type" value={form.account_type} onChange={handleFormChange} options={["Lumio Premier", "Lumio Standard", "Lumio Business"]} />
       {modal === "create" && (
         <Field label="Opening Balance (£)" name="opening_balance" value={form.opening_balance} onChange={handleFormChange} type="number" />
+      )}
+      {modal === "edit" && (
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Member Since</label>
+          <input
+            name="member_since"
+            type="month"
+            value={form.member_since}
+            onChange={handleFormChange}
+            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-lumio-accent/30"
+          />
+          <p className="text-[10px] text-gray-400 mt-1">Controls the "Member Since" date shown on the user's dashboard.</p>
+        </div>
       )}
       <Field label="Transfer PIN" name="transfer_pin" value={form.transfer_pin} onChange={handleFormChange} />
       <Field label="Password" name="password" value={form.password} onChange={handleFormChange} type="password" />
