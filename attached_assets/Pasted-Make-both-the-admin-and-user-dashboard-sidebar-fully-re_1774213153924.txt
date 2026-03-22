@@ -1,0 +1,93 @@
+Make both the admin and user dashboard sidebar 
+fully responsive with a collapse toggle.
+
+===================================================
+USER DASHBOARD SIDEBAR
+===================================================
+
+Add a collapse toggle button at the bottom of
+the sidebar above the avatar/logout section:
+
+Button:
+  Icon: ChevronLeft (Lucide) when expanded
+  Icon: ChevronRight (Lucide) when collapsed
+  Small square button, gold border, navy background
+  Hover: gold background, white icon
+
+Expanded state (default, 240px wide):
+  Shows icon + full label for each nav item
+  Shows full avatar + name + "Premier Account"
+  Shows full Lumio logo
+
+Collapsed state (64px wide):
+  Shows icons only, no labels
+  Shows avatar circle only, no name
+  Shows Lumio icon/symbol only, no wordmark
+  Each icon centered in the 64px width
+  Hover on icon: gold tooltip appears on right
+  showing the nav item name
+
+Transition:
+  Smooth width animation 300ms ease
+  Labels fade out on collapse
+  Labels fade in on expand
+
+State persists during the session:
+  If user collapses sidebar and navigates
+  to another page sidebar stays collapsed
+
+Main content area:
+  Expands to fill remaining width when
+  sidebar collapses
+  Contracts when sidebar expands
+  Smooth transition 300ms ease
+
+===================================================
+ADMIN SIDEBAR
+===================================================
+
+Same collapse behavior as user sidebar:
+
+Add collapse toggle button at bottom of
+admin sidebar:
+  Icon: ChevronLeft when expanded
+  Icon: ChevronRight when collapsed
+
+Expanded state (240px):
+  Icon + label for all nav items
+  "admin@lumiobank.co.uk" text visible
+  "Admin Panel" label visible below logo
+
+Collapsed state (64px):
+  Icons only
+  No labels
+  No email text
+  Logo symbol only
+  Tooltips on hover showing nav item names
+
+Transition: 300ms ease smooth width animation
+Main content expands/contracts accordingly
+
+===================================================
+MOBILE BEHAVIOR
+===================================================
+
+On mobile (below 768px):
+  Sidebar is hidden by default
+  Hamburger menu icon top left in topbar
+  Click hamburger → sidebar slides in from left
+  as full overlay (not push layout)
+  Overlay background: rgba(0,0,0,0.5) behind sidebar
+  Click overlay or X button → sidebar closes
+  No collapse button on mobile
+  Full sidebar always shows on mobile when open
+
+===================================================
+TOPBAR TOGGLE (DESKTOP)
+===================================================
+
+Also add a hamburger/toggle icon on the left
+side of the topbar on desktop:
+  Click → collapses or expands sidebar
+  Same behavior as the bottom collapse button
+  Both buttons stay in sync with sidebar state

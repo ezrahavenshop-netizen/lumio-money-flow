@@ -1,6 +1,9 @@
-import React, { useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Users, ArrowRightLeft, Bell, Settings, LogOut } from "lucide-react";
+import {
+  LayoutDashboard, Users, ArrowRightLeft, Bell, Settings,
+  LogOut, Menu, ChevronLeft, ChevronRight, X,
+} from "lucide-react";
 import { useApp } from "@/context/AppContext";
 import LumioLogo from "@/components/LumioLogo";
 import { supabase } from "@/lib/supabase";
@@ -13,16 +16,25 @@ const adminNav = [
   { label: "Settings", icon: Settings, path: "/admin/settings" },
 ];
 
+const COLLAPSED_KEY = "lumio_admin_sidebar_collapsed";
+
 const AdminLayout: React.FC = () => {
   const { isAdmin, setIsAdmin, setIsLoggedIn, adminUnreadCount, setAdminUnreadCount } = useApp();
   const location = useLocation();
   const navigate = useNavigate();
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
+  const [collapsed, setCollapsed] = useState<boolean>(() => {
+    try { return sessionStorage.getItem(COLLAPSED_KEY) === "true"; } catch { return false; }
+  });
+  const [mobileOpen, setMobileOpen] = useState(false);
+
   useEffect(() => {
-    if (!isAdmin) {
-      navigate("/login");
-    }
+    try { sessionStorage.setItem(COLLAPSED_KEY, String(collapsed)); } catch {}
+  }, [collapsed]);
+
+  useEffect(() => {
+    if (!isAdmin) navigate("/login");
   }, [isAdmin, navigate]);
 
   useEffect(() => {
@@ -30,9 +42,7 @@ const AdminLayout: React.FC = () => {
       .from("admin_alerts")
       .select("id", { count: "exact" })
       .eq("read", false)
-      .then(({ count }) => {
-        if (count !== null) setAdminUnreadCount(count);
-      });
+      .then(({ count }) => { if (count !== null) setAdminUnreadCount(count); });
 
     channelRef.current = supabase
       .channel("admin-alerts-badge")
@@ -41,74 +51,203 @@ const AdminLayout: React.FC = () => {
           .from("admin_alerts")
           .select("id", { count: "exact" })
           .eq("read", false)
-          .then(({ count }) => {
-            if (count !== null) setAdminUnreadCount(count);
-          });
+          .then(({ count }) => { if (count !== null) setAdminUnreadCount(count); });
       })
       .subscribe();
 
-    return () => {
-      if (channelRef.current) supabase.removeChannel(channelRef.current);
-    };
+    return () => { if (channelRef.current) supabase.removeChannel(channelRef.current); };
   }, [setAdminUnreadCount]);
 
-  const handleLogout = () => {
-    setIsAdmin(false);
-    setIsLoggedIn(false);
-    navigate("/login");
-  };
-
+  const handleLogout = () => { setIsAdmin(false); setIsLoggedIn(false); navigate("/login"); };
   const isActive = (path: string) =>
     path === "/admin" ? location.pathname === "/admin" : location.pathname.startsWith(path);
 
+  const sidebarW = collapsed ? 64 : 240;
+
   if (!isAdmin) return null;
+
+  const NavItem = ({ item, onClick }: { item: typeof adminNav[0]; onClick?: () => void }) => (
+    <div className="relative group">
+      <Link
+        to={item.path}
+        onClick={onClick}
+        className={`flex items-center gap-3 py-3 rounded-lg text-sm font-medium transition-all relative ${
+          collapsed ? "justify-center px-0 mx-2" : "px-4 mx-0"
+        } ${
+          isActive(item.path)
+            ? "bg-lumio-accent/10 text-lumio-accent border-l-2 border-lumio-accent"
+            : "text-primary-foreground/50 hover:text-primary-foreground/80 hover:bg-primary-foreground/5"
+        }`}
+      >
+        <item.icon size={17} className="flex-shrink-0" />
+        {!collapsed && (
+          <span className="whitespace-nowrap overflow-hidden">{item.label}</span>
+        )}
+        {!collapsed && item.label === "Alerts" && adminUnreadCount > 0 && (
+          <span className="ml-auto w-5 h-5 rounded-full bg-lumio-accent text-[10px] text-white flex items-center justify-center font-medium">
+            {adminUnreadCount > 99 ? "99+" : adminUnreadCount}
+          </span>
+        )}
+        {collapsed && item.label === "Alerts" && adminUnreadCount > 0 && (
+          <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-lumio-accent" />
+        )}
+      </Link>
+      {collapsed && (
+        <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 px-2.5 py-1.5 bg-lumio-dark border border-lumio-accent/40 text-primary-foreground text-xs rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none z-[60] shadow-lg">
+          {item.label}
+        </div>
+      )}
+    </div>
+  );
+
+  const CollapseButton = () => (
+    <button
+      onClick={() => setCollapsed((c) => !c)}
+      className={`flex items-center justify-center w-8 h-8 rounded-md border border-lumio-accent/60 bg-lumio-dark text-lumio-accent hover:bg-lumio-accent hover:text-white transition-all duration-200 ${collapsed ? "mx-auto" : "ml-auto mr-3"}`}
+      title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+    >
+      {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+    </button>
+  );
 
   return (
     <div className="min-h-screen flex" style={{ background: "#F4F6F9" }}>
-      <aside className="w-60 bg-lumio-dark flex flex-col fixed inset-y-0 left-0 z-40">
-        <div className="p-6 border-b border-white/5">
-          <LumioLogo variant="light" />
-          <p className="text-white/30 text-[10px] mt-1 uppercase tracking-widest">Admin Console</p>
+      {/* Desktop sidebar */}
+      <aside
+        className="hidden lg:flex flex-col fixed inset-y-0 left-0 z-40 bg-lumio-dark overflow-visible"
+        style={{ width: sidebarW, transition: "width 300ms ease" }}
+      >
+        <div className={`border-b border-white/5 flex-shrink-0 ${collapsed ? "flex justify-center items-center py-5 px-2" : "p-6"}`}>
+          {collapsed ? (
+            <span className="font-serif text-2xl tracking-tight">
+              <span className="text-lumio-accent">o</span>
+            </span>
+          ) : (
+            <>
+              <LumioLogo variant="light" />
+              <p className="text-white/30 text-[10px] mt-1 uppercase tracking-widest">Admin Console</p>
+            </>
+          )}
         </div>
 
-        <nav className="flex-1 px-3 py-4 space-y-1">
-          {adminNav.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all relative ${
-                isActive(item.path)
-                  ? "bg-lumio-accent/10 text-lumio-accent border-l-2 border-lumio-accent"
-                  : "text-primary-foreground/50 hover:text-primary-foreground/80 hover:bg-primary-foreground/5"
-              }`}
-            >
-              <item.icon size={17} />
-              {item.label}
-              {item.label === "Alerts" && adminUnreadCount > 0 && (
-                <span className="ml-auto w-5 h-5 rounded-full bg-lumio-accent text-[10px] text-white flex items-center justify-center font-medium">
-                  {adminUnreadCount > 99 ? "99+" : adminUnreadCount}
-                </span>
-              )}
-            </Link>
-          ))}
+        <nav className={`flex-1 py-4 space-y-0.5 ${collapsed ? "px-0" : "px-3"}`}>
+          {adminNav.map((item) => <NavItem key={item.path} item={item} />)}
         </nav>
 
-        <div className="p-4 border-t border-white/5">
-          <p className="text-white/70 text-xs font-medium truncate">admin@lumiobank.co.uk</p>
-          <p className="text-white/30 text-[10px] mb-3">Super Admin</p>
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-2 text-white/40 hover:text-white/70 text-sm transition-colors"
-          >
-            <LogOut size={14} /> Logout
-          </button>
+        <div className={`pb-3 flex-shrink-0 ${collapsed ? "flex justify-center" : "px-3"}`}>
+          <CollapseButton />
+        </div>
+
+        <div className={`border-t border-white/5 flex-shrink-0 ${collapsed ? "p-3" : "p-4"}`}>
+          {!collapsed && (
+            <>
+              <p className="text-white/70 text-xs font-medium truncate">admin@lumiobank.co.uk</p>
+              <p className="text-white/30 text-[10px] mb-3">Super Admin</p>
+            </>
+          )}
+          {collapsed ? (
+            <div className="flex justify-center">
+              <button onClick={handleLogout} title="Logout" className="text-white/40 hover:text-white/70 transition-colors">
+                <LogOut size={14} />
+              </button>
+            </div>
+          ) : (
+            <button onClick={handleLogout} className="flex items-center gap-2 text-white/40 hover:text-white/70 text-sm transition-colors">
+              <LogOut size={14} /> Logout
+            </button>
+          )}
         </div>
       </aside>
 
-      <div className="flex-1 ml-60 min-h-screen">
-        <main className="p-8">
-          <Outlet />
-        </main>
+      {/* Mobile sidebar overlay */}
+      {mobileOpen && (
+        <>
+          <div
+            className="lg:hidden fixed inset-0 bg-black/50 z-40"
+            onClick={() => setMobileOpen(false)}
+          />
+          <aside className="lg:hidden fixed inset-y-0 left-0 w-60 bg-lumio-dark flex flex-col z-50">
+            <div className="flex items-center justify-between p-6 border-b border-white/5">
+              <div>
+                <LumioLogo variant="light" />
+                <p className="text-white/30 text-[10px] mt-1 uppercase tracking-widest">Admin Console</p>
+              </div>
+              <button onClick={() => setMobileOpen(false)} className="text-white/40 hover:text-white/70 transition-colors">
+                <X size={18} />
+              </button>
+            </div>
+            <nav className="flex-1 px-3 py-4 space-y-0.5">
+              {adminNav.map((item) => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  onClick={() => setMobileOpen(false)}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all relative ${
+                    isActive(item.path)
+                      ? "bg-lumio-accent/10 text-lumio-accent border-l-2 border-lumio-accent"
+                      : "text-primary-foreground/50 hover:text-primary-foreground/80 hover:bg-primary-foreground/5"
+                  }`}
+                >
+                  <item.icon size={17} />
+                  {item.label}
+                  {item.label === "Alerts" && adminUnreadCount > 0 && (
+                    <span className="ml-auto w-5 h-5 rounded-full bg-lumio-accent text-[10px] text-white flex items-center justify-center font-medium">
+                      {adminUnreadCount > 99 ? "99+" : adminUnreadCount}
+                    </span>
+                  )}
+                </Link>
+              ))}
+            </nav>
+            <div className="p-4 border-t border-white/5">
+              <p className="text-white/70 text-xs font-medium truncate">admin@lumiobank.co.uk</p>
+              <p className="text-white/30 text-[10px] mb-3">Super Admin</p>
+              <button onClick={handleLogout} className="flex items-center gap-2 text-white/40 hover:text-white/70 text-sm transition-colors">
+                <LogOut size={14} /> Logout
+              </button>
+            </div>
+          </aside>
+        </>
+      )}
+
+      {/* Main content */}
+      <div
+        className="flex-1 min-h-screen min-w-0"
+        style={{ marginLeft: 0, transition: "margin-left 300ms ease" }}
+      >
+        {/* Desktop main with dynamic margin */}
+        <div
+          className="hidden lg:block min-h-screen"
+          style={{ marginLeft: sidebarW, transition: "margin-left 300ms ease" }}
+        >
+          <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-gray-200 h-14 flex items-center px-6 gap-4">
+            <button
+              onClick={() => setCollapsed((c) => !c)}
+              className="text-gray-500 hover:text-gray-800 transition-colors"
+              title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            >
+              <Menu size={20} />
+            </button>
+            <div className="flex-1" />
+            <span className="text-sm text-gray-500 font-medium">Admin Panel</span>
+          </header>
+          <main className="p-8">
+            <Outlet />
+          </main>
+        </div>
+
+        {/* Mobile layout */}
+        <div className="lg:hidden min-h-screen">
+          <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-gray-200 h-14 flex items-center px-4 gap-4">
+            <button onClick={() => setMobileOpen(true)} className="text-gray-700">
+              <Menu size={20} />
+            </button>
+            <div className="flex-1" />
+            <span className="text-sm text-gray-500 font-medium">Admin Panel</span>
+          </header>
+          <main className="p-4">
+            <Outlet />
+          </main>
+        </div>
       </div>
     </div>
   );
