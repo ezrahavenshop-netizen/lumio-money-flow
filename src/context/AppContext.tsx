@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 
 export interface Transaction {
   id: string;
@@ -79,18 +79,96 @@ const emptyUser: UserData = {
   kycVerified: false,
 };
 
+function ssGet<T>(key: string, fallback: T): T {
+  try {
+    const v = sessionStorage.getItem(key);
+    return v !== null ? (JSON.parse(v) as T) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function ssSet(key: string, value: unknown) {
+  try { sessionStorage.setItem(key, JSON.stringify(value)); } catch {}
+}
+
+function ssDel(key: string) {
+  try { sessionStorage.removeItem(key); } catch {}
+}
+
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<UserData>(emptyUser);
-  const [userId, setUserId] = useState<string | null>(null);
-  const [userStatus, setUserStatus] = useState<string>("active");
-  const [transferPin, setTransferPin] = useState<string>("");
-  const [balance, setBalance] = useState(0);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [user, setUserRaw] = useState<UserData>(() => ssGet("lumio_user", emptyUser));
+  const [userId, setUserIdRaw] = useState<string | null>(() => ssGet("lumio_userId", null));
+  const [userStatus, setUserStatusRaw] = useState<string>(() => ssGet("lumio_userStatus", "active"));
+  const [transferPin, setTransferPinRaw] = useState<string>(() => ssGet("lumio_transferPin", ""));
+  const [balance, setBalanceRaw] = useState<number>(() => ssGet("lumio_balance", 0));
+  const [isLoggedIn, setIsLoggedInRaw] = useState<boolean>(() => ssGet("lumio_isLoggedIn", false));
+  const [isAdmin, setIsAdminRaw] = useState<boolean>(() => ssGet("lumio_isAdmin", false));
   const [adminUnreadCount, setAdminUnreadCount] = useState(0);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+
+  // Persist helpers
+  const setUser: React.Dispatch<React.SetStateAction<UserData>> = (v) => {
+    setUserRaw((prev) => {
+      const next = typeof v === "function" ? v(prev) : v;
+      ssSet("lumio_user", next);
+      return next;
+    });
+  };
+  const setUserId: React.Dispatch<React.SetStateAction<string | null>> = (v) => {
+    setUserIdRaw((prev) => {
+      const next = typeof v === "function" ? v(prev) : v;
+      ssSet("lumio_userId", next);
+      return next;
+    });
+  };
+  const setUserStatus: React.Dispatch<React.SetStateAction<string>> = (v) => {
+    setUserStatusRaw((prev) => {
+      const next = typeof v === "function" ? v(prev) : v;
+      ssSet("lumio_userStatus", next);
+      return next;
+    });
+  };
+  const setTransferPin: React.Dispatch<React.SetStateAction<string>> = (v) => {
+    setTransferPinRaw((prev) => {
+      const next = typeof v === "function" ? v(prev) : v;
+      ssSet("lumio_transferPin", next);
+      return next;
+    });
+  };
+  const setBalance: React.Dispatch<React.SetStateAction<number>> = (v) => {
+    setBalanceRaw((prev) => {
+      const next = typeof v === "function" ? v(prev) : v;
+      ssSet("lumio_balance", next);
+      return next;
+    });
+  };
+  const setIsLoggedIn: React.Dispatch<React.SetStateAction<boolean>> = (v) => {
+    setIsLoggedInRaw((prev) => {
+      const next = typeof v === "function" ? v(prev) : v;
+      ssSet("lumio_isLoggedIn", next);
+      if (!next) {
+        // Clear all user session data on logout
+        ssDel("lumio_user");
+        ssDel("lumio_userId");
+        ssDel("lumio_userStatus");
+        ssDel("lumio_transferPin");
+        ssDel("lumio_balance");
+        ssDel("lumio_isLoggedIn");
+      }
+      return next;
+    });
+  };
+  const setIsAdmin: React.Dispatch<React.SetStateAction<boolean>> = (v) => {
+    setIsAdminRaw((prev) => {
+      const next = typeof v === "function" ? v(prev) : v;
+      ssSet("lumio_isAdmin", next);
+      if (!next) ssDel("lumio_isAdmin");
+      return next;
+    });
+  };
 
   const markAllRead = useCallback(() => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
