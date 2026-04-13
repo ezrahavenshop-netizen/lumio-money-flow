@@ -47,9 +47,12 @@ const DashboardLayout: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [maintenanceMode, setMaintenanceMode] = useState(false);
+
   const unreadCount = notifications.filter((n) => !n.read).length;
   const prevStatus = useRef<string>(userStatus);
   const suspendedToastShown = useRef(false);
+
+  const sidebarW = collapsed ? 64 : 240;
 
   useEffect(() => {
     try { sessionStorage.setItem(COLLAPSED_KEY, String(collapsed)); } catch {}
@@ -99,141 +102,16 @@ const DashboardLayout: React.FC = () => {
   }, []);
 
   const handleLogout = () => { setIsLoggedIn(false); navigate("/"); };
-  const handleNotifToggle = () => { setNotifOpen(!notifOpen); if (!notifOpen) markAllRead(); };
+  const handleNotifToggle = () => { setNotifOpen((o) => !o); if (!notifOpen) markAllRead(); };
   const isActive = (path: string) => location.pathname === path;
-  const sidebarW = collapsed ? 64 : 240;
 
-  const NavItem = ({ item, onClick }: { item: typeof navItems[0]; onClick?: () => void }) => (
-    <div className="relative group">
-      <Link
-        to={item.path}
-        onClick={onClick}
-        className={`flex items-center gap-3 py-3 rounded-lg text-sm font-medium transition-all ${
-          collapsed ? "justify-center px-0 mx-2" : "px-4 mx-0"
-        } ${
-          isActive(item.path)
-            ? "bg-lumio-accent/10 text-lumio-accent border-l-2 border-lumio-accent"
-            : "text-primary-foreground/50 hover:text-primary-foreground/80 hover:bg-primary-foreground/5"
-        }`}
-      >
-        <item.icon size={18} className="flex-shrink-0" />
-        {!collapsed && (
-          <span className="transition-opacity duration-200 opacity-100 whitespace-nowrap overflow-hidden">
-            {item.label}
-          </span>
-        )}
-      </Link>
-      {collapsed && (
-        <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 px-2.5 py-1.5 bg-lumio-dark border border-lumio-accent/40 text-primary-foreground text-xs rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none z-[60] shadow-lg">
-          {item.label}
-        </div>
-      )}
-    </div>
-  );
+  const avatarEl = user.avatarUrl
+    ? <img src={user.avatarUrl} className="w-9 h-9 rounded-full object-cover flex-shrink-0" style={{ outline: "1px solid rgba(201,150,58,0.2)", outlineOffset: "-1px" }} />
+    : <div className="w-9 h-9 rounded-full bg-lumio-primary flex items-center justify-center font-serif text-xs text-primary-foreground flex-shrink-0">{user.initials}</div>;
 
-  const CollapseButton = () => (
-    <button
-      onClick={() => setCollapsed((c) => !c)}
-      className={`flex items-center justify-center w-8 h-8 rounded-md border border-lumio-accent/60 bg-lumio-dark text-lumio-accent hover:bg-lumio-accent hover:text-white transition-all duration-200 ${collapsed ? "mx-auto" : "ml-auto mr-3"}`}
-      title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-    >
-      {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
-    </button>
-  );
-
-  const DesktopSidebarContent = () => (
-    <div className="flex flex-col h-full">
-      <div className={`flex items-center border-b border-primary-foreground/10 flex-shrink-0 ${collapsed ? "justify-center py-5 px-2" : "p-6"}`}>
-        {collapsed ? (
-          <span className="font-serif text-2xl tracking-tight">
-            <span className="text-lumio-accent">o</span>
-          </span>
-        ) : (
-          <LumioLogo variant="light" />
-        )}
-      </div>
-
-      <nav className={`flex-1 py-3 space-y-0.5 ${collapsed ? "px-0" : "px-3"}`}>
-        {navItems.map((item) => <NavItem key={item.path} item={item} />)}
-      </nav>
-
-      <div className={`pb-3 flex-shrink-0 ${collapsed ? "flex justify-center" : "px-3"}`}>
-        <CollapseButton />
-      </div>
-
-      <div className={`border-t border-primary-foreground/10 flex-shrink-0 ${collapsed ? "p-3" : "p-4"}`}>
-        <div className={`flex items-center mb-3 ${collapsed ? "justify-center" : "gap-3"}`}>
-          {user.avatarUrl ? (
-            <img src={user.avatarUrl} className="w-9 h-9 rounded-full object-cover flex-shrink-0" style={{ outline: "1px solid rgba(201,150,58,0.2)", outlineOffset: "-1px" }} />
-          ) : (
-            <div className="w-9 h-9 rounded-full bg-lumio-primary flex items-center justify-center font-serif text-xs text-primary-foreground flex-shrink-0">{user.initials}</div>
-          )}
-          {!collapsed && (
-            <div className="min-w-0 overflow-hidden">
-              <p className="text-primary-foreground text-sm font-medium truncate">{user.fullName}</p>
-              <p className="text-primary-foreground/40 text-xs">{user.accountType}</p>
-            </div>
-          )}
-        </div>
-        {!collapsed && (
-          <button onClick={handleLogout} className="flex items-center gap-2 text-primary-foreground/40 hover:text-primary-foreground/70 text-sm transition-colors w-full">
-            <LogOut size={14} /> Log out
-          </button>
-        )}
-        {collapsed && (
-          <div className="flex justify-center mt-2">
-            <button onClick={handleLogout} title="Log out" className="text-primary-foreground/40 hover:text-primary-foreground/70 transition-colors">
-              <LogOut size={14} />
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-
-  const MobileSidebarContent = () => (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between p-6 border-b border-primary-foreground/10">
-        <LumioLogo variant="light" />
-        <button onClick={() => setMobileOpen(false)} className="text-primary-foreground/50 hover:text-primary-foreground transition-colors">
-          <X size={18} />
-        </button>
-      </div>
-      <nav className="flex-1 px-3 py-3 space-y-0.5">
-        {navItems.map((item) => (
-          <Link
-            key={item.path}
-            to={item.path}
-            onClick={() => setMobileOpen(false)}
-            className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
-              isActive(item.path)
-                ? "bg-lumio-accent/10 text-lumio-accent border-l-2 border-lumio-accent"
-                : "text-primary-foreground/50 hover:text-primary-foreground/80 hover:bg-primary-foreground/5"
-            }`}
-          >
-            <item.icon size={18} />
-            {item.label}
-          </Link>
-        ))}
-      </nav>
-      <div className="p-4 border-t border-primary-foreground/10">
-        <div className="flex items-center gap-3 mb-3">
-          {user.avatarUrl ? (
-            <img src={user.avatarUrl} className="w-9 h-9 rounded-full object-cover" style={{ outline: "1px solid rgba(201,150,58,0.2)", outlineOffset: "-1px" }} />
-          ) : (
-            <div className="w-9 h-9 rounded-full bg-lumio-primary flex items-center justify-center font-serif text-xs text-primary-foreground">{user.initials}</div>
-          )}
-          <div className="min-w-0">
-            <p className="text-primary-foreground text-sm font-medium truncate">{user.fullName}</p>
-            <p className="text-primary-foreground/40 text-xs">{user.accountType}</p>
-          </div>
-        </div>
-        <button onClick={handleLogout} className="flex items-center gap-2 text-primary-foreground/40 hover:text-primary-foreground/70 text-sm transition-colors w-full">
-          <LogOut size={14} /> Log out
-        </button>
-      </div>
-    </div>
-  );
+  const avatarSmEl = user.avatarUrl
+    ? <img src={user.avatarUrl} className="w-8 h-8 rounded-full object-cover" style={{ outline: "1px solid rgba(201,150,58,0.2)", outlineOffset: "-1px" }} />
+    : <div className="w-8 h-8 rounded-full bg-lumio-primary flex items-center justify-center font-serif text-xs text-primary-foreground">{user.initials}</div>;
 
   if (maintenanceMode) {
     return (
@@ -249,6 +127,7 @@ const DashboardLayout: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-lumio-surface">
+      {/* Suspension banner */}
       {userStatus === "suspended" && (
         <div className="w-full bg-red-600 text-white text-sm py-2.5 px-4 flex items-center justify-center gap-2 z-50 flex-shrink-0 select-none">
           <AlertTriangle size={15} className="flex-shrink-0" />
@@ -261,7 +140,7 @@ const DashboardLayout: React.FC = () => {
       )}
 
       <div className="flex flex-1 min-h-0">
-        {/* Desktop sidebar */}
+        {/* ── Desktop fixed sidebar ── */}
         <aside
           className="hidden lg:flex flex-col fixed inset-y-0 left-0 z-40 bg-lumio-dark overflow-visible"
           style={{
@@ -270,10 +149,77 @@ const DashboardLayout: React.FC = () => {
             transition: "width 300ms ease",
           }}
         >
-          <DesktopSidebarContent />
+          {/* Logo */}
+          <div className={`flex items-center border-b border-primary-foreground/10 flex-shrink-0 ${collapsed ? "justify-center py-5 px-2" : "p-6"}`}>
+            {collapsed
+              ? <span className="font-serif text-2xl tracking-tight"><span className="text-lumio-accent">o</span></span>
+              : <LumioLogo variant="light" />}
+          </div>
+
+          {/* Nav */}
+          <nav className={`flex-1 py-3 space-y-0.5 overflow-visible ${collapsed ? "px-0" : "px-3"}`}>
+            {navItems.map((item) => (
+              <div key={item.path} className="relative group">
+                <Link
+                  to={item.path}
+                  className={`flex items-center gap-3 py-3 rounded-lg text-sm font-medium transition-all ${
+                    collapsed ? "justify-center px-0 mx-2" : "px-4 mx-0"
+                  } ${
+                    isActive(item.path)
+                      ? "bg-lumio-accent/10 text-lumio-accent border-l-2 border-lumio-accent"
+                      : "text-primary-foreground/50 hover:text-primary-foreground/80 hover:bg-primary-foreground/5"
+                  }`}
+                >
+                  <item.icon size={18} className="flex-shrink-0" />
+                  {!collapsed && <span className="whitespace-nowrap">{item.label}</span>}
+                </Link>
+                {collapsed && (
+                  <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 px-2.5 py-1.5 bg-lumio-dark border border-lumio-accent/40 text-primary-foreground text-xs rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none z-[60] shadow-lg">
+                    {item.label}
+                  </div>
+                )}
+              </div>
+            ))}
+          </nav>
+
+          {/* Collapse toggle */}
+          <div className={`pb-3 flex-shrink-0 ${collapsed ? "flex justify-center" : "px-3 flex justify-end"}`}>
+            <button
+              onClick={() => setCollapsed((c) => !c)}
+              className="flex items-center justify-center w-8 h-8 rounded-md border border-lumio-accent/60 bg-lumio-dark text-lumio-accent hover:bg-lumio-accent hover:text-white transition-all duration-200"
+              title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            >
+              {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+            </button>
+          </div>
+
+          {/* User area */}
+          <div className={`border-t border-primary-foreground/10 flex-shrink-0 ${collapsed ? "p-3" : "p-4"}`}>
+            <div className={`flex items-center mb-3 ${collapsed ? "justify-center" : "gap-3"}`}>
+              {avatarEl}
+              {!collapsed && (
+                <div className="min-w-0 overflow-hidden">
+                  <p className="text-primary-foreground text-sm font-medium truncate">{user.fullName}</p>
+                  <p className="text-primary-foreground/40 text-xs">{user.accountType}</p>
+                </div>
+              )}
+            </div>
+            <div className={collapsed ? "flex justify-center" : ""}>
+              <button onClick={handleLogout} title="Log out" className="flex items-center gap-2 text-primary-foreground/40 hover:text-primary-foreground/70 text-sm transition-colors">
+                <LogOut size={14} />
+                {!collapsed && "Log out"}
+              </button>
+            </div>
+          </div>
         </aside>
 
-        {/* Mobile sidebar overlay */}
+        {/* ── Desktop spacer (keeps main content from hiding behind fixed sidebar) ── */}
+        <div
+          className="hidden lg:block flex-shrink-0"
+          style={{ width: sidebarW, transition: "width 300ms ease" }}
+        />
+
+        {/* ── Mobile sidebar overlay ── */}
         <AnimatePresence>
           {mobileOpen && (
             <>
@@ -287,108 +233,114 @@ const DashboardLayout: React.FC = () => {
                 transition={{ ease: [0.16, 1, 0.3, 1] }}
                 className="lg:hidden fixed inset-y-0 left-0 w-60 bg-lumio-dark flex flex-col z-50"
               >
-                <MobileSidebarContent />
+                <div className="flex items-center justify-between p-6 border-b border-primary-foreground/10">
+                  <LumioLogo variant="light" />
+                  <button onClick={() => setMobileOpen(false)} className="text-primary-foreground/50 hover:text-primary-foreground transition-colors">
+                    <X size={18} />
+                  </button>
+                </div>
+                <nav className="flex-1 px-3 py-3 space-y-0.5">
+                  {navItems.map((item) => (
+                    <Link
+                      key={item.path}
+                      to={item.path}
+                      onClick={() => setMobileOpen(false)}
+                      className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
+                        isActive(item.path)
+                          ? "bg-lumio-accent/10 text-lumio-accent border-l-2 border-lumio-accent"
+                          : "text-primary-foreground/50 hover:text-primary-foreground/80 hover:bg-primary-foreground/5"
+                      }`}
+                    >
+                      <item.icon size={18} />
+                      {item.label}
+                    </Link>
+                  ))}
+                </nav>
+                <div className="p-4 border-t border-primary-foreground/10">
+                  <div className="flex items-center gap-3 mb-3">
+                    {avatarEl}
+                    <div className="min-w-0">
+                      <p className="text-primary-foreground text-sm font-medium truncate">{user.fullName}</p>
+                      <p className="text-primary-foreground/40 text-xs">{user.accountType}</p>
+                    </div>
+                  </div>
+                  <button onClick={handleLogout} className="flex items-center gap-2 text-primary-foreground/40 hover:text-primary-foreground/70 text-sm transition-colors">
+                    <LogOut size={14} /> Log out
+                  </button>
+                </div>
               </motion.aside>
             </>
           )}
         </AnimatePresence>
 
-        {/* Main content */}
-        <div
-          className="flex-1 min-w-0"
-          style={{ marginLeft: 0, transition: "margin-left 300ms ease" }}
-        >
-          <div
-            className="hidden lg:block"
-            style={{ marginLeft: sidebarW, transition: "margin-left 300ms ease" }}
-          >
-            {/* Desktop top bar */}
-            <header className="sticky top-0 z-30 bg-card/80 backdrop-blur-md border-b border-border h-14 flex items-center px-6 gap-4">
-              <button
-                onClick={() => setCollapsed((c) => !c)}
-                className="text-muted-foreground hover:text-foreground transition-colors"
-                title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-              >
-                <Menu size={20} />
-              </button>
-              <div className="flex-1" />
-              <button className="text-muted-foreground hover:text-foreground transition-colors">
-                <Search size={18} />
-              </button>
-              <div className="relative">
-                <button onClick={handleNotifToggle} className="text-muted-foreground hover:text-foreground transition-colors relative">
-                  <Bell size={18} />
-                  {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-lumio-accent text-[10px] text-accent-foreground flex items-center justify-center font-medium">{unreadCount}</span>
-                  )}
-                </button>
-                <AnimatePresence>
-                  {notifOpen && (
-                    <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="absolute right-0 top-10 w-80 bg-card rounded-xl border border-border elevated-shadow overflow-hidden">
-                      <div className="p-4 border-b border-border flex items-center justify-between">
-                        <h3 className="font-medium text-sm text-foreground">Notifications</h3>
-                        <button onClick={markAllRead} className="text-xs text-lumio-accent">Mark all read</button>
-                      </div>
-                      <div className="max-h-64 overflow-y-auto">
-                        {notifications.length === 0 ? (
-                          <div className="p-4 text-center text-muted-foreground text-sm">No notifications</div>
-                        ) : notifications.map((n) => (
-                          <div key={n.id} className={`p-4 border-b border-border last:border-0 ${!n.read ? "border-l-2 border-l-lumio-accent" : ""}`}>
-                            <p className={`text-sm ${!n.read ? "font-medium text-foreground" : "text-muted-foreground"}`}>{n.text}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-              {user.avatarUrl ? (
-                <img src={user.avatarUrl} className="w-8 h-8 rounded-full object-cover" style={{ outline: "1px solid rgba(201,150,58,0.2)", outlineOffset: "-1px" }} />
-              ) : (
-                <div className="w-8 h-8 rounded-full bg-lumio-primary flex items-center justify-center font-serif text-xs text-primary-foreground">{user.initials}</div>
-              )}
-            </header>
-            <main className="p-8">
-              <AnimatePresence mode="wait">
-                <motion.div key={location.pathname} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }} transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}>
-                  <Outlet />
-                </motion.div>
-              </AnimatePresence>
-            </main>
-          </div>
+        {/* ── Main content (single column, single Outlet) ── */}
+        <div className="flex-1 min-w-0 flex flex-col">
+          {/* Top bar */}
+          <header className="sticky top-0 z-30 bg-card/80 backdrop-blur-md border-b border-border h-14 flex items-center px-4 lg:px-6 gap-4">
+            {/* Mobile hamburger */}
+            <button onClick={() => setMobileOpen(true)} className="lg:hidden text-foreground">
+              <Menu size={20} />
+            </button>
+            {/* Desktop sidebar toggle */}
+            <button
+              onClick={() => setCollapsed((c) => !c)}
+              className="hidden lg:block text-muted-foreground hover:text-foreground transition-colors"
+              title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            >
+              <Menu size={20} />
+            </button>
 
-          {/* Mobile layout */}
-          <div className="lg:hidden">
-            <header className="sticky top-0 z-30 bg-card/80 backdrop-blur-md border-b border-border h-14 flex items-center px-4 gap-4">
-              <button onClick={() => setMobileOpen(true)} className="text-foreground">
-                <Menu size={20} />
+            <div className="flex-1" />
+
+            <button className="text-muted-foreground hover:text-foreground transition-colors">
+              <Search size={18} />
+            </button>
+
+            <div className="relative">
+              <button onClick={handleNotifToggle} className="text-muted-foreground hover:text-foreground transition-colors relative">
+                <Bell size={18} />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-lumio-accent text-[10px] text-accent-foreground flex items-center justify-center font-medium">{unreadCount}</span>
+                )}
               </button>
-              <div className="flex-1" />
-              <button className="text-muted-foreground hover:text-foreground transition-colors">
-                <Search size={18} />
-              </button>
-              <div className="relative">
-                <button onClick={handleNotifToggle} className="text-muted-foreground hover:text-foreground transition-colors relative">
-                  <Bell size={18} />
-                  {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-lumio-accent text-[10px] text-accent-foreground flex items-center justify-center font-medium">{unreadCount}</span>
-                  )}
-                </button>
-              </div>
-              {user.avatarUrl ? (
-                <img src={user.avatarUrl} className="w-8 h-8 rounded-full object-cover" style={{ outline: "1px solid rgba(201,150,58,0.2)", outlineOffset: "-1px" }} />
-              ) : (
-                <div className="w-8 h-8 rounded-full bg-lumio-primary flex items-center justify-center font-serif text-xs text-primary-foreground">{user.initials}</div>
-              )}
-            </header>
-            <main className="p-4">
-              <AnimatePresence mode="wait">
-                <motion.div key={location.pathname} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }} transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}>
-                  <Outlet />
-                </motion.div>
+              <AnimatePresence>
+                {notifOpen && (
+                  <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="absolute right-0 top-10 w-80 bg-card rounded-xl border border-border elevated-shadow overflow-hidden z-50">
+                    <div className="p-4 border-b border-border flex items-center justify-between">
+                      <h3 className="font-medium text-sm text-foreground">Notifications</h3>
+                      <button onClick={markAllRead} className="text-xs text-lumio-accent">Mark all read</button>
+                    </div>
+                    <div className="max-h-64 overflow-y-auto">
+                      {notifications.length === 0 ? (
+                        <div className="p-4 text-center text-muted-foreground text-sm">No notifications</div>
+                      ) : notifications.map((n) => (
+                        <div key={n.id} className={`p-4 border-b border-border last:border-0 ${!n.read ? "border-l-2 border-l-lumio-accent" : ""}`}>
+                          <p className={`text-sm ${!n.read ? "font-medium text-foreground" : "text-muted-foreground"}`}>{n.text}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
               </AnimatePresence>
-            </main>
-          </div>
+            </div>
+
+            {avatarSmEl}
+          </header>
+
+          {/* Page content — single Outlet */}
+          <main className="p-4 lg:p-8 flex-1">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={location.pathname}
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -16 }}
+                transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+              >
+                <Outlet />
+              </motion.div>
+            </AnimatePresence>
+          </main>
         </div>
       </div>
     </div>
