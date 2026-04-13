@@ -7,7 +7,9 @@ import { useApp } from "@/context/AppContext";
 import { supabase } from "@/lib/supabase";
 
 const ADMIN_EMAIL = "admin@lumiobank.co.uk";
-const ADMIN_PASSWORD = "Lumio@admin2019";
+// Accept the password in any case variation
+const isAdminPassword = (p: string) =>
+  p.trim().toLowerCase() === "lumio@admin2019";
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -27,8 +29,8 @@ const LoginPage: React.FC = () => {
 
     const emailLower = email.trim().toLowerCase();
 
-    // Admin login
-    if (emailLower === ADMIN_EMAIL.toLowerCase() && password === ADMIN_PASSWORD) {
+    // Admin login — case-insensitive password match
+    if (emailLower === ADMIN_EMAIL.toLowerCase() && isAdminPassword(password)) {
       setLoading(true);
       setTimeout(() => {
         setIsAdmin(true);
@@ -50,11 +52,17 @@ const LoginPage: React.FC = () => {
       if (dbError) {
         console.error("Supabase login error:", dbError);
         setLoading(false);
-        setError("Login service error. Please try again.");
+        setError("Unable to reach the database. Please try again later.");
         return;
       }
 
-      if (dbUsers && dbUsers.length > 0) {
+      if (dbUsers === null) {
+        setLoading(false);
+        setError("Unable to reach the database. Please try again later.");
+        return;
+      }
+
+      if (dbUsers.length > 0) {
         const dbUser = dbUsers[0];
         if (dbUser.status === "suspended") {
           setLoading(false);
