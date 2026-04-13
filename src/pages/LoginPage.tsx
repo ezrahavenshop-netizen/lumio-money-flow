@@ -7,7 +7,7 @@ import { useApp } from "@/context/AppContext";
 import { supabase } from "@/lib/supabase";
 
 const ADMIN_EMAIL = "admin@lumiobank.co.uk";
-const ADMIN_PASSWORD = "Lumio@Admin2019";
+const ADMIN_PASSWORD = "Lumio@admin2019";
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -27,6 +27,7 @@ const LoginPage: React.FC = () => {
 
     const emailLower = email.trim().toLowerCase();
 
+    // Admin login
     if (emailLower === ADMIN_EMAIL.toLowerCase() && password === ADMIN_PASSWORD) {
       setLoading(true);
       setTimeout(() => {
@@ -38,58 +39,71 @@ const LoginPage: React.FC = () => {
 
     setLoading(true);
 
-    const { data: dbUsers } = await supabase
-      .from("users")
-      .select("*")
-      .ilike("email", emailLower)
-      .eq("password", password)
-      .limit(1);
+    try {
+      const { data: dbUsers, error: dbError } = await supabase
+        .from("users")
+        .select("*")
+        .ilike("email", emailLower)
+        .eq("password", password)
+        .limit(1);
 
-    if (dbUsers && dbUsers.length > 0) {
-      const dbUser = dbUsers[0];
-      if (dbUser.status === "suspended") {
+      if (dbError) {
+        console.error("Supabase login error:", dbError);
         setLoading(false);
-        setSuspended(true);
+        setError("Login service error. Please try again.");
         return;
       }
-      const fullName = `${dbUser.first_name} ${dbUser.last_name}`;
-      const savedAvatar = localStorage.getItem(`lumio_avatar_${dbUser.id}`) || null;
-      setUser({
-        firstName: dbUser.first_name,
-        lastName: dbUser.last_name,
-        fullName,
-        initials: `${dbUser.first_name?.[0] || ""}${dbUser.last_name?.[0] || ""}`.toUpperCase(),
-        avatarUrl: savedAvatar,
-        dateOfBirth: dbUser.date_of_birth || "",
-        gender: dbUser.gender || "",
-        maritalStatus: dbUser.marital_status || "",
-        occupation: dbUser.occupation || "",
-        address: dbUser.address || "",
-        phone: dbUser.phone || "",
-        email: dbUser.email,
-        accountNumber: dbUser.account_number || "",
-        accountNumberMasked: dbUser.account_number ? `**** **** ${dbUser.account_number.slice(-4)}` : "",
-        accountType: dbUser.account_type || "Lumio Premier",
-        memberSince: new Date(dbUser.created_at).toLocaleDateString("en-GB", { month: "long", year: "numeric" }),
-        kycVerified: dbUser.kyc_status === "verified",
-      });
-      setBalance(Number(dbUser.balance) || 0);
-      setUserId(dbUser.id);
-      setUserStatus(dbUser.status || "active");
-      setTransferPin(dbUser.transfer_pin || "");
 
-      // Log login alert
-      await supabase.from("admin_alerts").insert({ type: "user_login", message: `User ${fullName} logged in` });
+      if (dbUsers && dbUsers.length > 0) {
+        const dbUser = dbUsers[0];
+        if (dbUser.status === "suspended") {
+          setLoading(false);
+          setSuspended(true);
+          return;
+        }
+        const fullName = `${dbUser.first_name} ${dbUser.last_name}`;
+        const savedAvatar = localStorage.getItem(`lumio_avatar_${dbUser.id}`) || null;
+        setUser({
+          firstName: dbUser.first_name,
+          lastName: dbUser.last_name,
+          fullName,
+          initials: `${dbUser.first_name?.[0] || ""}${dbUser.last_name?.[0] || ""}`.toUpperCase(),
+          avatarUrl: savedAvatar,
+          dateOfBirth: dbUser.date_of_birth || "",
+          gender: dbUser.gender || "",
+          maritalStatus: dbUser.marital_status || "",
+          occupation: dbUser.occupation || "",
+          address: dbUser.address || "",
+          phone: dbUser.phone || "",
+          email: dbUser.email,
+          accountNumber: dbUser.account_number || "",
+          accountNumberMasked: dbUser.account_number ? `**** **** ${dbUser.account_number.slice(-4)}` : "",
+          accountType: dbUser.account_type || "Lumio Premier",
+          memberSince: new Date(dbUser.created_at).toLocaleDateString("en-GB", { month: "long", year: "numeric" }),
+          kycVerified: dbUser.kyc_status === "verified",
+        });
+        setBalance(Number(dbUser.balance) || 0);
+        setUserId(dbUser.id);
+        setUserStatus(dbUser.status || "active");
+        setTransferPin(dbUser.transfer_pin || "");
 
-      setTimeout(() => {
-        setIsLoggedIn(true);
-        navigate("/dashboard");
-      }, 800);
-      return;
+        // Log login alert (non-blocking)
+        supabase.from("admin_alerts").insert({ type: "user_login", message: `User ${fullName} logged in` });
+
+        setTimeout(() => {
+          setIsLoggedIn(true);
+          navigate("/dashboard");
+        }, 800);
+        return;
+      }
+
+      setLoading(false);
+      setError("Invalid email or password. Please try again.");
+    } catch (err) {
+      console.error("Login error:", err);
+      setLoading(false);
+      setError("Unable to reach the database. Please check your connection or contact support.");
     }
-
-    setLoading(false);
-    setError("Invalid email or password. Please try again.");
   };
 
   const fieldClass = (hasError: boolean) =>
