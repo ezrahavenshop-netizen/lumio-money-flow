@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppProvider, useApp } from "@/context/AppContext";
+import { useEffect } from "react";
 import Index from "./pages/Index";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
@@ -20,6 +21,20 @@ import AdminAlerts from "./pages/admin/AdminAlerts";
 import AdminSettings from "./pages/admin/AdminSettings";
 
 const queryClient = new QueryClient();
+
+function useTawkWidget() {
+  useEffect(() => {
+    if (document.getElementById("tawk-script")) return;
+    const s0 = document.getElementsByTagName("script")[0];
+    const s1 = document.createElement("script");
+    s1.id = "tawk-script";
+    s1.async = true;
+    s1.src = "https://embed.tawk.to/6a3aa832452f781d473b573b/1jrqi2264";
+    s1.charset = "UTF-8";
+    s1.setAttribute("crossorigin", "*");
+    s0.parentNode!.insertBefore(s1, s0);
+  }, []);
+}
 
 const PlaceholderPage = ({ title }: { title: string }) => (
   <div className="flex items-center justify-center min-h-[50vh]">
@@ -43,7 +58,9 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-const AppRoutes = () => (
+const AppRoutes = () => {
+  useTawkWidget();
+  return (
   <BrowserRouter>
     <Routes>
       <Route path="/" element={<Index />} />
@@ -71,7 +88,8 @@ const AppRoutes = () => (
       <Route path="*" element={<NotFound />} />
     </Routes>
   </BrowserRouter>
-);
+  );
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
