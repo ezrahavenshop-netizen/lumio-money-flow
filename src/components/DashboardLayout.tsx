@@ -10,16 +10,19 @@ import { useApp } from "@/context/AppContext";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 
-function useChatwayWidget() {
+function useTawkWidget() {
   useEffect(() => {
-    if (document.getElementById("chatway")) return;
-    const script = document.createElement("script");
-    script.id = "chatway";
-    script.src = "https://cdn.chatway.app/widget.js?id=P0qAHkKWPpyX";
-    script.async = true;
-    document.body.appendChild(script);
+    if (document.getElementById("tawk-script")) return;
+    const s0 = document.getElementsByTagName("script")[0];
+    const s1 = document.createElement("script");
+    s1.id = "tawk-script";
+    s1.async = true;
+    s1.src = "https://embed.tawk.to/6a3aa832452f781d473b573b/1jrqi2264";
+    s1.charset = "UTF-8";
+    s1.setAttribute("crossorigin", "*");
+    s0.parentNode!.insertBefore(s1, s0);
     return () => {
-      const existing = document.getElementById("chatway");
+      const existing = document.getElementById("tawk-script");
       if (existing) existing.remove();
     };
   }, []);
@@ -36,7 +39,7 @@ const navItems = [
 const COLLAPSED_KEY = "lumio_sidebar_collapsed";
 
 const DashboardLayout: React.FC = () => {
-  useChatwayWidget();
+  useTawkWidget();
   const location = useLocation();
   const navigate = useNavigate();
   const { user, userId, userStatus, setUserStatus, setBalance, setIsLoggedIn, notifications, markAllRead } = useApp();
