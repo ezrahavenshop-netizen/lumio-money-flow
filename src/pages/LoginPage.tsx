@@ -246,11 +246,7 @@ const LoginPage: React.FC = () => {
               >
                 <p className="font-semibold text-red-700 mb-1">Account Suspended</p>
                 <p className="text-red-600">
-                  Your account has been suspended. Please contact{" "}
-                  <a href="mailto:support@lumiobank.co.uk" className="font-semibold underline">
-                    support@lumiobank.co.uk
-                  </a>{" "}
-                  for assistance.
+                  Your account has been suspended please kindly contact customer support for more info.
                 </p>
               </motion.div>
             )}

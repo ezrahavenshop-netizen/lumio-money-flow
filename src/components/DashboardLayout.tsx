@@ -58,7 +58,7 @@ const DashboardLayout: React.FC = () => {
             if (!suspendedToastShown.current) {
               suspendedToastShown.current = true;
               toast.error(
-                "⚠ Your account has been suspended. For more information please contact our support team at support@lumiobank.co.uk. We are here to help.",
+                "⚠ Your account has been suspended please kindly contact customer support for more info.",
                 { duration: Infinity, closeButton: true }
               );
             }
