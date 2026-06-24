@@ -2,6 +2,7 @@ import React, { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { Camera, Shield, Copy, Eye, EyeOff, CheckCircle } from "lucide-react";
 import { useApp } from "@/context/AppContext";
+import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 
 const ProfilePage: React.FC = () => {
@@ -9,29 +10,54 @@ const ProfilePage: React.FC = () => {
   const fileRef = useRef<HTMLInputElement>(null);
   const [activeTab, setActiveTab] = useState<"personal" | "account" | "security">("personal");
   const [showFullAccount, setShowFullAccount] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [twoFA, setTwoFA] = useState(true);
   const [biometric, setBiometric] = useState(false);
   const [loginNotif, setLoginNotif] = useState(true);
   const [txnAlerts, setTxnAlerts] = useState(true);
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file || !userId) return;
     if (file.size > 5 * 1024 * 1024) { toast.error("Image too large. Please choose a file under 5MB."); return; }
     if (!file.type.startsWith("image/")) { toast.error("Please upload a valid image file (JPG, PNG, WebP)"); return; }
-    const reader = new FileReader();
-    reader.onload = () => {
-      const dataUrl = reader.result as string;
-      setUser((prev) => ({ ...prev, avatarUrl: dataUrl }));
-      if (userId) localStorage.setItem(`lumio_avatar_${userId}`, dataUrl);
-      toast.success("Profile photo updated ✓");
-    };
-    reader.readAsDataURL(file);
+
+    setUploading(true);
+    const ext = file.name.split(".").pop();
+    const path = `${userId}/avatar.${ext}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("avatars")
+      .upload(path, file, { upsert: true });
+
+    if (uploadError) {
+      toast.error("Failed to upload photo. Please try again.");
+      setUploading(false);
+      return;
+    }
+
+    const { data: { publicUrl } } = supabase.storage.from("avatars").getPublicUrl(path);
+
+    const { error: dbError } = await supabase
+      .from("users")
+      .update({ avatar_url: publicUrl })
+      .eq("id", userId);
+
+    if (dbError) {
+      toast.error("Photo uploaded but failed to save. Please try again.");
+      setUploading(false);
+      return;
+    }
+
+    setUser((prev) => ({ ...prev, avatarUrl: publicUrl }));
+    setUploading(false);
+    toast.success("Profile photo updated ✓");
   };
 
-  const removePhoto = () => {
+  const removePhoto = async () => {
+    if (!userId) return;
+    await supabase.from("users").update({ avatar_url: null }).eq("id", userId);
     setUser((prev) => ({ ...prev, avatarUrl: null }));
-    if (userId) localStorage.removeItem(`lumio_avatar_${userId}`);
     toast("Profile photo removed");
   };
 
@@ -56,8 +82,10 @@ const ProfilePage: React.FC = () => {
               <span className="text-primary-foreground text-[10px] mt-0.5">Change</span>
             </div>
           </div>
-          <button onClick={() => fileRef.current?.click()} className="text-lumio-accent text-xs font-medium">Upload Photo</button>
-          {user.avatarUrl && <button onClick={removePhoto} className="text-lumio-error text-xs ml-3">Remove</button>}
+          <button onClick={() => !uploading && fileRef.current?.click()} className="text-lumio-accent text-xs font-medium disabled:opacity-50">
+            {uploading ? "Uploading..." : "Upload Photo"}
+          </button>
+          {user.avatarUrl && !uploading && <button onClick={removePhoto} className="text-lumio-error text-xs ml-3">Remove</button>}
 
           <h2 className="font-serif text-xl text-foreground mt-4">{user.fullName}</h2>
           <p className="text-muted-foreground text-sm">{user.occupation}</p>
