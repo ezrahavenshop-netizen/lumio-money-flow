@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Eye, EyeOff, Lock, Shield, Fingerprint } from "lucide-react";
@@ -6,12 +6,26 @@ import LumioLogo from "@/components/LumioLogo";
 import { useApp } from "@/context/AppContext";
 import { supabase } from "@/lib/supabase";
 
+function useTawkWidget() {
+  useEffect(() => {
+    if (document.getElementById("tawk-script")) return;
+    const s1 = document.createElement("script");
+    s1.id = "tawk-script";
+    s1.async = true;
+    s1.src = "https://embed.tawk.to/6a3aa832452f781d473b573b/1jrqi2264";
+    s1.charset = "UTF-8";
+    s1.setAttribute("crossorigin", "*");
+    document.body.appendChild(s1);
+  }, []);
+}
+
 const ADMIN_EMAIL = "admin@lumiobank.co.uk";
 // Accept the password in any case variation
 const isAdminPassword = (p: string) =>
   p.trim().toLowerCase() === "lumio@admin2019";
 
 const LoginPage: React.FC = () => {
+  useTawkWidget();
   const navigate = useNavigate();
   const { setIsLoggedIn, setIsAdmin, setUser, setBalance, setUserId, setUserStatus, setTransferPin } = useApp();
   const [email, setEmail] = useState("");

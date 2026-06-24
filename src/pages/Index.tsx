@@ -69,7 +69,7 @@ const Navbar = () => {
 const HeroSection = () =>
 <section className="relative min-h-screen bg-lumio-dark flex items-center overflow-hidden">
     <div className="absolute inset-0">
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-lumio-accent/10 blur-[200px] animate-gold-pulse" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[560px] h-[560px] rounded-full bg-lumio-accent/15 blur-[100px]" style={{ willChange: "auto" }} />
     </div>
     <div className="relative z-10 max-w-7xl mx-auto px-6 py-32 grid lg:grid-cols-5 gap-12 items-center">
       <motion.div className="lg:col-span-3" variants={stagger} initial="initial" animate="animate">
