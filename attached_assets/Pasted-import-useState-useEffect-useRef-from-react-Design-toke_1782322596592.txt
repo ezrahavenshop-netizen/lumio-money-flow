@@ -1,0 +1,428 @@
+import { useState, useEffect, useRef } from "react";
+
+// ─── Design tokens (Lumio navy/gold system) ───────────────────────────────────
+const T = {
+  navy:    "#0A1628",
+  navyMid: "#0F2040",
+  navyCard:"#162035",
+  gold:    "#C9A85C",
+  goldDim: "#8A6E38",
+  goldPale:"#F0E0B0",
+  cream:   "#F7F4EE",
+  slate:   "#B0BCCF",
+  white:   "#FFFFFF",
+};
+
+// ─── Sparkline data ────────────────────────────────────────────────────────────
+const sparkData = [412000, 418500, 410200, 425000, 430100, 440800, 438000, 450732];
+
+function Sparkline({ data, width = 260, height = 48 }) {
+  const min = Math.min(...data);
+  const max = Math.max(...data);
+  const pts = data.map((v, i) => {
+    const x = (i / (data.length - 1)) * width;
+    const y = height - ((v - min) / (max - min)) * (height * 0.7) - height * 0.15;
+    return `${x},${y}`;
+  });
+  const polyline = pts.join(" ");
+  const last = pts[pts.length - 1].split(",");
+
+  return (
+    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} overflow="visible">
+      <defs>
+        <linearGradient id="sg" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stopColor={T.gold} stopOpacity="0.4" />
+          <stop offset="100%" stopColor={T.gold} stopOpacity="1" />
+        </linearGradient>
+        <filter id="glow">
+          <feGaussianBlur stdDeviation="2" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+      <polyline
+        points={polyline}
+        fill="none"
+        stroke={`url(#sg)`}
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {/* Glow dot at latest value */}
+      <circle
+        cx={last[0]} cy={last[1]} r="4"
+        fill={T.gold} filter="url(#glow)"
+      />
+      <circle
+        cx={last[0]} cy={last[1]} r="2.5"
+        fill={T.white}
+      />
+    </svg>
+  );
+}
+
+// ─── Animated counter ──────────────────────────────────────────────────────────
+function Counter({ target, duration = 1200 }) {
+  const [val, setVal] = useState(0);
+  useEffect(() => {
+    const start = Date.now();
+    const tick = () => {
+      const elapsed = Date.now() - start;
+      const progress = Math.min(elapsed / duration, 1);
+      // Ease out cubic
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setVal(Math.floor(eased * target));
+      if (progress < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }, [target, duration]);
+  return <>{val.toLocaleString("en-GB")}</>;
+}
+
+// ─── Mini stat pill ────────────────────────────────────────────────────────────
+function StatPill({ label, value, positive }) {
+  return (
+    <div style={{
+      display: "flex", flexDirection: "column", gap: 2,
+      padding: "8px 14px",
+      background: "rgba(255,255,255,0.06)",
+      border: "1px solid rgba(201,168,92,0.18)",
+      borderRadius: 10,
+      minWidth: 88,
+    }}>
+      <span style={{ fontSize: 10, color: T.slate, letterSpacing: "0.08em", textTransform: "uppercase" }}>{label}</span>
+      <span style={{
+        fontSize: 13, fontWeight: 600,
+        color: positive ? "#5EC48A" : "#E07070",
+        fontFamily: "'DM Mono', monospace",
+      }}>{value}</span>
+    </div>
+  );
+}
+
+// ─── MAIN HERO ────────────────────────────────────────────────────────────────
+export default function LumioHero() {
+  const [masked, setMasked] = useState(false);
+  const scrollRef = useRef(null);
+
+  return (
+    <div
+      style={{
+        // KEY FIX: contain scroll, prevent overscroll bleed
+        height: "100dvh",
+        overflowY: "auto",
+        overflowX: "hidden",
+        overscrollBehavior: "contain",
+        background: T.cream,
+        fontFamily: "'Inter', 'SF Pro Display', system-ui, sans-serif",
+        WebkitOverflowScrolling: "touch",
+      }}
+      ref={scrollRef}
+    >
+      {/* ── Status bar simulation ── */}
+      <div style={{
+        position: "sticky", top: 0, zIndex: 50,
+        background: T.navy,
+        padding: "14px 20px 10px",
+        display: "flex", justifyContent: "space-between", alignItems: "center",
+      }}>
+        <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+          <div style={{ width: 22, height: 18, display: "flex", flexDirection: "column", gap: 3, cursor: "pointer" }}>
+            {[0,1,2].map(i => (
+              <div key={i} style={{ height: 2, background: T.gold, borderRadius: 1, width: i === 1 ? "65%" : "100%" }} />
+            ))}
+          </div>
+        </div>
+        <span style={{
+          fontSize: 11, color: T.gold, fontWeight: 600,
+          letterSpacing: "0.12em", textTransform: "uppercase",
+        }}>Lumio</span>
+        <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
+          {/* search */}
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={T.slate} strokeWidth="1.8">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+          </svg>
+          {/* bell */}
+          <div style={{ position: "relative" }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={T.slate} strokeWidth="1.8">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            </svg>
+            <div style={{
+              position:"absolute", top:-3, right:-3,
+              width:8, height:8, borderRadius:"50%",
+              background: T.gold, border:`1.5px solid ${T.navy}`,
+            }}/>
+          </div>
+          {/* avatar */}
+          <div style={{
+            width: 30, height: 30, borderRadius: "50%",
+            background: `linear-gradient(135deg, ${T.gold}, ${T.goldDim})`,
+            border: `2px solid ${T.gold}`,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 11, fontWeight: 700, color: T.navy,
+          }}>DH</div>
+        </div>
+      </div>
+
+      {/* ── HERO SECTION ── */}
+      <div style={{
+        background: `linear-gradient(170deg, ${T.navy} 0%, ${T.navyMid} 60%, #0D1F3C 100%)`,
+        padding: "24px 20px 32px",
+        position: "relative",
+        overflow: "hidden",
+      }}>
+
+        {/* Ambient orb */}
+        <div style={{
+          position: "absolute",
+          top: -60, right: -40,
+          width: 220, height: 220,
+          background: `radial-gradient(circle, ${T.gold}22 0%, transparent 70%)`,
+          pointerEvents: "none",
+        }}/>
+        <div style={{
+          position: "absolute",
+          bottom: -40, left: -60,
+          width: 180, height: 180,
+          background: `radial-gradient(circle, #1A3A6C44 0%, transparent 70%)`,
+          pointerEvents: "none",
+        }}/>
+
+        {/* Greeting */}
+        <div style={{ marginBottom: 20, position: "relative" }}>
+          <p style={{ fontSize: 12, color: T.slate, letterSpacing: "0.06em", margin: 0 }}>
+            WEDNESDAY, 24 JUNE
+          </p>
+          <h2 style={{
+            fontSize: 20, fontWeight: 700, color: T.white,
+            margin: "4px 0 0", letterSpacing: "-0.02em",
+          }}>
+            Good evening, David.
+          </h2>
+        </div>
+
+        {/* ── CARD ── */}
+        <div style={{
+          background: `linear-gradient(135deg, ${T.navyCard} 0%, #1E3054 50%, #0F2345 100%)`,
+          borderRadius: 20,
+          padding: "20px",
+          position: "relative",
+          overflow: "hidden",
+          border: `1px solid rgba(201,168,92,0.25)`,
+          boxShadow: `0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(201,168,92,0.12)`,
+          marginBottom: 16,
+        }}>
+          {/* Card shimmer lines */}
+          <div style={{
+            position: "absolute", inset: 0, borderRadius: 20,
+            background: `repeating-linear-gradient(
+              115deg,
+              transparent 0%,
+              transparent 48%,
+              rgba(201,168,92,0.03) 49%,
+              rgba(201,168,92,0.03) 51%,
+              transparent 52%
+            )`,
+            pointerEvents: "none",
+          }}/>
+
+          {/* Card header row */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 28 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              {/* Chip */}
+              <div style={{
+                width: 36, height: 28,
+                background: `linear-gradient(135deg, ${T.gold} 0%, #A8841A 100%)`,
+                borderRadius: 5,
+                boxShadow: `0 2px 8px rgba(201,168,92,0.4)`,
+              }}/>
+              <div style={{
+                width: 20, height: 20, borderRadius: "50%",
+                background: `radial-gradient(circle at 40% 40%, rgba(255,255,255,0.15), transparent)`,
+                border: "1px solid rgba(255,255,255,0.08)",
+              }}/>
+            </div>
+            <div style={{ textAlign: "right" }}>
+              <p style={{
+                fontSize: 11, fontWeight: 700, color: T.gold,
+                letterSpacing: "0.14em", textTransform: "uppercase", margin: 0,
+              }}>Lumio Premier</p>
+              <p style={{ fontSize: 10, color: T.slate, margin: "2px 0 0", letterSpacing: "0.06em" }}>PRIVATE BANKING</p>
+            </div>
+          </div>
+
+          {/* Balance area */}
+          <div style={{ marginBottom: 20 }}>
+            <p style={{
+              fontSize: 10, color: T.slate, letterSpacing: "0.1em",
+              textTransform: "uppercase", margin: "0 0 6px",
+            }}>Available Balance</p>
+
+            <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 8 }}>
+              <span style={{
+                fontSize: 13, fontWeight: 500, color: T.gold,
+                alignSelf: "flex-start", marginTop: 8,
+                fontFamily: "'DM Mono', monospace",
+              }}>£</span>
+              <span style={{
+                fontSize: 38, fontWeight: 800, color: T.white,
+                letterSpacing: "-0.04em",
+                fontFamily: "'Inter', system-ui, sans-serif",
+                lineHeight: 1,
+              }}>
+                {masked ? "••••••" : <Counter target={450732} duration={1400} />}
+              </span>
+              <span style={{ fontSize: 18, fontWeight: 400, color: T.slate, marginBottom: 4 }}>.00</span>
+            </div>
+
+            {/* Live indicator */}
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <div style={{
+                width: 6, height: 6, borderRadius: "50%", background: "#5EC48A",
+                boxShadow: "0 0 0 3px rgba(94,196,138,0.25)",
+                animation: "pulse 2s ease-in-out infinite",
+              }}/>
+              <span style={{ fontSize: 11, color: T.slate }}>Live · updated in real time</span>
+            </div>
+          </div>
+
+          {/* Sparkline */}
+          <div style={{ marginBottom: 18, marginLeft: -4 }}>
+            <Sparkline data={sparkData} width={300} height={44} />
+          </div>
+
+          {/* Card footer */}
+          <div style={{
+            display: "flex", justifyContent: "space-between", alignItems: "flex-end",
+            borderTop: `1px solid rgba(201,168,92,0.12)`,
+            paddingTop: 14,
+          }}>
+            <div>
+              <p style={{ fontSize: 9, color: T.slate, margin: "0 0 3px", letterSpacing: "0.08em" }}>CARDHOLDER</p>
+              <p style={{
+                fontSize: 13, fontWeight: 600, color: T.white,
+                margin: 0, letterSpacing: "0.04em",
+              }}>David Hong</p>
+            </div>
+            <div style={{ textAlign: "right" }}>
+              <p style={{ fontSize: 9, color: T.slate, margin: "0 0 3px", letterSpacing: "0.08em" }}>CARD NUMBER</p>
+              <p style={{
+                fontSize: 13, color: T.slate,
+                fontFamily: "'DM Mono', monospace",
+                margin: 0, letterSpacing: "0.12em",
+              }}>
+                {masked ? "•••• •••• ••••" : "**** **** 8812"}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Stat pills row ── */}
+        <div style={{ display: "flex", gap: 10, marginBottom: 8, overflowX: "auto", paddingBottom: 2 }}>
+          <StatPill label="Month gain" value="+£9,732" positive={true} />
+          <StatPill label="Spent today" value="−£1,240" positive={false} />
+          <StatPill label="Saved" value="+£3,400" positive={true} />
+        </div>
+
+        {/* Mask toggle */}
+        <button
+          onClick={() => setMasked(m => !m)}
+          style={{
+            background: "none", border: "none", padding: "6px 0",
+            display: "flex", alignItems: "center", gap: 6, cursor: "pointer",
+          }}
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={T.slate} strokeWidth="2">
+            {masked
+              ? <><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></>
+              : <><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>
+            }
+          </svg>
+          <span style={{ fontSize: 11, color: T.slate }}>
+            {masked ? "Show balance" : "Hide balance"}
+          </span>
+        </button>
+      </div>
+
+      {/* ── QUICK ACTIONS ── */}
+      <div style={{ padding: "24px 20px 0" }}>
+        <p style={{
+          fontSize: 10, fontWeight: 600, color: "#8896A8",
+          letterSpacing: "0.12em", textTransform: "uppercase",
+          margin: "0 0 14px",
+        }}>Quick Actions</p>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          {[
+            { icon: "⇄", label: "Send Money" },
+            { icon: "⏱", label: "Transactions" },
+            { icon: "↑", label: "Top Up" },
+            { icon: "⊞", label: "Cards" },
+          ].map(({ icon, label }) => (
+            <div key={label} style={{
+              background: T.white,
+              border: "1px solid #E8E4DC",
+              borderRadius: 14,
+              padding: "18px 16px",
+              display: "flex", flexDirection: "column", gap: 8,
+              cursor: "pointer",
+              transition: "box-shadow 0.15s",
+            }}>
+              <div style={{
+                width: 36, height: 36, borderRadius: 10,
+                background: `linear-gradient(135deg, ${T.gold}22, ${T.gold}11)`,
+                border: `1px solid ${T.gold}44`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 16,
+              }}>{icon}</div>
+              <span style={{ fontSize: 13, fontWeight: 600, color: T.navy }}>{label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── RECENT TRANSACTIONS ── */}
+      <div style={{ padding: "24px 20px 40px" }}>
+        <p style={{
+          fontSize: 10, fontWeight: 600, color: "#8896A8",
+          letterSpacing: "0.12em", textTransform: "uppercase",
+          margin: "0 0 14px",
+        }}>Recent Activity</p>
+        {[
+          { name: "Shoprite Lagos", amount: "-₦28,500", time: "2h ago", type: "🛒" },
+          { name: "NNPC Transfer In", amount: "+£6,200", time: "Yesterday", type: "↓" },
+          { name: "Netflix Premium", amount: "-£17.99", time: "Mon", type: "▶" },
+        ].map(({ name, amount, time, type }) => (
+          <div key={name} style={{
+            display: "flex", alignItems: "center", gap: 14,
+            padding: "14px 0",
+            borderBottom: "1px solid #EEEBE4",
+          }}>
+            <div style={{
+              width: 40, height: 40, borderRadius: 12,
+              background: T.cream, border: "1px solid #DDD9CF",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 16, flexShrink: 0,
+            }}>{type}</div>
+            <div style={{ flex: 1 }}>
+              <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: T.navy }}>{name}</p>
+              <p style={{ margin: "2px 0 0", fontSize: 11, color: "#8896A8" }}>{time}</p>
+            </div>
+            <span style={{
+              fontSize: 13, fontWeight: 700,
+              color: amount.startsWith("+") ? "#2E8B57" : T.navy,
+              fontFamily: "'DM Mono', monospace",
+            }}>{amount}</span>
+          </div>
+        ))}
+      </div>
+
+      <style>{`
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.4; }
+        }
+        * { box-sizing: border-box; }
+        ::-webkit-scrollbar { display: none; }
+      `}</style>
+    </div>
+  );
+}
