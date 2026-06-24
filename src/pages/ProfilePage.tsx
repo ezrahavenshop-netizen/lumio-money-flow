@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import { motion } from "framer-motion";
-import { Camera, Shield, Copy, Eye, EyeOff, CheckCircle } from "lucide-react";
+import { Camera, Shield, Copy, Eye, EyeOff } from "lucide-react";
 import { useApp } from "@/context/AppContext";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
@@ -182,16 +182,6 @@ const ProfilePage: React.FC = () => {
                   <button onClick={() => toast("Redirecting to secure password reset...")} className="w-full text-left px-4 py-3 rounded-lg border border-border text-foreground text-sm font-medium hover:bg-muted transition-colors">Change Password</button>
                 </div>
 
-                <div className="pt-4 border-t border-border">
-                  <p className="text-sm font-medium text-foreground mb-2">Active Sessions</p>
-                  <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle size={14} className="text-lumio-success" />
-                      <span className="text-sm text-foreground">Chrome · Chelmsford, UK · Active now</span>
-                    </div>
-                    <button className="text-xs text-lumio-error hover:text-lumio-error/80">Log Out</button>
-                  </div>
-                </div>
               </div>
             )}
           </div>
