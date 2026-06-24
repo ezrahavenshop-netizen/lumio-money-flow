@@ -1,0 +1,379 @@
+Replit AI Prompt – Fix Mobile Hamburger Menu Scroll Glitch and Improve Mobile Navigation Experience
+
+Issue Summary
+
+There is a visual glitch with the mobile hamburger menu on the landing page.
+
+When the page first loads and the hamburger menu is opened, everything appears correctly.
+
+However, if the user scrolls down the landing page and then opens the hamburger menu, the menu becomes visually misaligned.
+
+Based on testing and screenshots:
+
+* Menu content appears offset.
+* Navigation items shift out of place.
+* Underlying page content becomes visible behind the menu.
+* The overlay does not consistently cover the viewport.
+* The menu appears affected by the current page scroll position.
+* The experience feels broken and unpolished.
+
+The issue appears most noticeable on mobile devices, particularly iPhone Safari, but the implementation should be reviewed across all breakpoints.
+
+⸻
+
+Investigation Requirements
+
+Audit the entire mobile navigation system and determine whether the issue is caused by:
+
+* Positioning errors (absolute vs fixed)
+* Viewport height calculations (100vh)
+* Scroll position inheritance
+* Missing body scroll lock
+* Z-index conflicts
+* Mobile Safari viewport behavior
+* Responsive breakpoint inconsistencies
+* Overlay container rendering inside a scrolling parent
+
+Verify whether the issue exists:
+
+* Mobile only
+* Tablet
+* Desktop
+* Or in the shared navigation component used across multiple breakpoints
+
+Apply fixes globally if necessary.
+
+⸻
+
+Required Behavior
+
+The hamburger menu should function as a true fullscreen navigation overlay.
+
+Regardless of where the user is on the page:
+
+* Top of page
+* Middle of page
+* Bottom of page
+
+Opening the menu should always produce the exact same visual result.
+
+The menu must:
+
+* Open from the top of the viewport.
+* Cover the entire screen.
+* Ignore the page’s current scroll position.
+* Remain perfectly aligned.
+* Prevent background scrolling.
+* Prevent content bleeding through the overlay.
+
+⸻
+
+Positioning Requirements
+
+The menu overlay should be viewport-based rather than page-based.
+
+Use a fullscreen overlay approach equivalent to:
+
+position: fixed;
+top: 0;
+left: 0;
+right: 0;
+bottom: 0;
+width: 100%;
+height: 100vh;
+
+or modern viewport units where appropriate:
+
+height: 100dvh;
+
+for improved mobile browser support.
+
+The menu should never rely on parent container positioning.
+
+⸻
+
+Scroll Lock Requirements
+
+When the menu opens:
+
+document.body.style.overflow = 'hidden';
+
+When the menu closes:
+
+document.body.style.overflow = '';
+
+or use the framework-equivalent implementation.
+
+While the menu is open:
+
+* The page underneath must not scroll.
+* Touch gestures should not move background content.
+* Scrolling should only occur within the menu if necessary.
+
+⸻
+
+Overlay Requirements
+
+The overlay should:
+
+* Cover the entire viewport.
+* Block interaction with page content underneath.
+* Maintain proper layering.
+* Have a sufficiently high z-index.
+
+Verify no landing page section can appear above the menu.
+
+Check:
+
+* Hero section
+* Floating cards
+* Decorative elements
+* CTA buttons
+* Sticky elements
+* Animated backgrounds
+
+⸻
+
+Mobile Safari Compatibility
+
+Specifically verify behavior on:
+
+* iPhone Safari
+* iPhone Chrome
+* Android Chrome
+* Android Samsung Browser
+
+Ensure:
+
+* No viewport jumping.
+* No scroll-position offset.
+* No layout shifting.
+* No menu displacement after scrolling.
+
+Use modern viewport units where necessary:
+
+100dvh
+
+instead of relying solely on:
+
+100vh
+
+where mobile browser chrome may affect sizing.
+
+⸻
+
+Navigation Animation Improvements
+
+The menu should feel polished and premium.
+
+Opening Animation
+
+Overlay:
+
+* Fade in smoothly.
+
+Navigation Content:
+
+* Fade in.
+* Slight upward motion.
+* Duration: 250–400ms.
+* Ease-out timing.
+
+Example effect:
+
+* Opacity 0 → 1
+* TranslateY(10px) → TranslateY(0)
+
+Closing Animation
+
+* Fade out smoothly.
+* No abrupt disappearance.
+* Preserve user scroll position.
+
+⸻
+
+Landing Page Animation Improvements
+
+The landing page currently loads quickly, but some sections appear instantly with no transition.
+
+Add subtle entrance animations throughout the landing page.
+
+Hero Section
+
+Animate:
+
+* Headline
+* Subheadline
+* CTA buttons
+* Hero visual
+
+Feature Sections
+
+Animate:
+
+* Feature cards
+* Icons
+* Titles
+* Descriptions
+
+Statistics Section
+
+Animate:
+
+* Metrics
+* Highlights
+* Numbers
+
+Testimonials
+
+Animate:
+
+* Cards
+* Images
+* Quotes
+
+Pricing Section
+
+Animate:
+
+* Pricing cards
+* CTA buttons
+* Plan details
+
+⸻
+
+Animation Style
+
+Use subtle, professional animations only.
+
+Recommended:
+
+opacity
+transform: translateY()
+
+Avoid:
+
+width animations
+height animations
+margin animations
+heavy blur effects
+complex shadows
+expensive repaint effects
+
+Animation duration:
+
+* 300–500ms
+
+Easing:
+
+ease-out
+
+⸻
+
+Staggering
+
+For a premium feel:
+
+Sequence:
+
+1. Navigation
+2. Hero headline
+3. Hero description
+4. CTA buttons
+5. Hero visual
+6. Remaining sections
+
+Use:
+
+* 50–100ms stagger between elements.
+* 100–150ms stagger between major sections.
+
+The result should feel smooth without making the site feel slower.
+
+⸻
+
+Accessibility
+
+Respect reduced-motion settings.
+
+If:
+
+prefers-reduced-motion: reduce
+
+Then:
+
+* Disable non-essential animations.
+* Render content immediately.
+
+⸻
+
+Testing Requirements
+
+Test 1
+
+Open menu at top of page.
+
+Expected:
+
+* Perfect fullscreen overlay.
+
+Test 2
+
+Scroll halfway down page and open menu.
+
+Expected:
+
+* Identical result to Test 1.
+
+Test 3
+
+Scroll near bottom and open menu.
+
+Expected:
+
+* No displacement or offset.
+
+Test 4
+
+Open menu and attempt to scroll page.
+
+Expected:
+
+* Background remains locked.
+
+Test 5
+
+Close menu.
+
+Expected:
+
+* Return to exact previous scroll position.
+
+Test 6
+
+Test on:
+
+* iPhone Safari
+* iPhone Chrome
+* Android Chrome
+* Tablet
+* Desktop
+
+Expected:
+
+* Consistent navigation behavior.
+
+⸻
+
+Success Criteria
+
+* Hamburger menu works correctly at all scroll positions.
+* Menu is fixed to the viewport.
+* No content bleeding through.
+* No visual offset.
+* No scroll-related glitches.
+* Mobile Safari issues resolved.
+* Landing page sections animate smoothly.
+* Animations remain subtle and professional.
+* Performance remains excellent.
+* User experience feels polished, premium, and production-ready.

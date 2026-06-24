@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Shield, Lock, CheckCircle, ArrowRight, Star, Menu, X, Smartphone, TrendingUp, Clock, Headphones, CreditCard, PiggyBank } from "lucide-react";
 import LumioLogo from "@/components/LumioLogo";
 
@@ -24,51 +24,107 @@ const Navbar = () => {
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 40);
-    window.addEventListener("scroll", handler);
+    window.addEventListener("scroll", handler, { passive: true });
     return () => window.removeEventListener("scroll", handler);
   }, []);
 
-  return (
-    <motion.nav
-      initial={{ opacity: 0, y: -16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? "bg-card/95 backdrop-blur-md shadow-md border-b border-border" : "bg-transparent"}`}
-    >
-      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-        <LumioLogo variant={scrolled ? "dark" : "light"} />
-        <div className="hidden md:flex items-center gap-8">
-          {["Personal", "Business", "Wealth", "About", "Contact"].map((item) =>
-          <a key={item} href="#" className={`text-sm font-sans font-medium transition-colors ${scrolled ? "text-foreground/70 hover:text-foreground" : "text-primary-foreground/70 hover:text-primary-foreground"}`}>
-              {item}
-            </a>
-          )}
-        </div>
-        <div className="hidden md:flex items-center gap-3">
-          <span className={`text-[11px] ${scrolled ? "text-muted-foreground" : "text-primary-foreground/50"} flex items-center gap-1`}>
-            <Lock size={10} /> FCA Authorised
-          </span>
-          <Link to="/login" className={`text-sm font-medium px-4 py-2 rounded-lg border transition-all ${scrolled ? "border-lumio-primary text-lumio-primary hover:bg-lumio-primary hover:text-primary-foreground" : "border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10"}`}>
-            Log In
-          </Link>
-          <Link to="/register" className="text-sm font-medium px-4 py-2 rounded-lg bg-lumio-accent text-accent-foreground hover:bg-lumio-accent-light transition-all gold-glow-hover">
-            Open Account
-          </Link>
-        </div>
-        <button onClick={() => setMobileOpen(!mobileOpen)} className="md:hidden">
-          {mobileOpen ? <X className={scrolled ? "text-foreground" : "text-primary-foreground"} /> : <Menu className={scrolled ? "text-foreground" : "text-primary-foreground"} />}
-        </button>
-      </div>
-      {mobileOpen &&
-      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="md:hidden bg-lumio-dark/98 backdrop-blur-xl fixed inset-0 top-16 z-50 flex flex-col items-center justify-center gap-6">
-          {["Personal", "Business", "Wealth", "About", "Contact"].map((item) =>
-        <a key={item} href="#" className="text-primary-foreground text-xl font-serif">{item}</a>
-        )}
-          <Link to="/login" className="text-lg px-6 py-3 rounded-lg bg-lumio-accent text-accent-foreground" onClick={() => setMobileOpen(false)}>Log In</Link>
-        </motion.div>
-      }
-    </motion.nav>);
+  // Lock body scroll while menu is open
+  useEffect(() => {
+    document.body.style.overflow = mobileOpen ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [mobileOpen]);
 
+  const close = () => setMobileOpen(false);
+
+  return (
+    <>
+      <motion.nav
+        initial={{ opacity: 0, y: -16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+        className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 ${scrolled ? "bg-card/95 backdrop-blur-md shadow-md border-b border-border" : "bg-transparent"}`}
+      >
+        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+          <LumioLogo variant={mobileOpen ? "light" : scrolled ? "dark" : "light"} />
+          <div className="hidden md:flex items-center gap-8">
+            {["Personal", "Business", "Wealth", "About", "Contact"].map((item) =>
+              <a key={item} href="#" className={`text-sm font-sans font-medium transition-colors ${scrolled ? "text-foreground/70 hover:text-foreground" : "text-primary-foreground/70 hover:text-primary-foreground"}`}>{item}</a>
+            )}
+          </div>
+          <div className="hidden md:flex items-center gap-3">
+            <span className={`text-[11px] ${scrolled ? "text-muted-foreground" : "text-primary-foreground/50"} flex items-center gap-1`}>
+              <Lock size={10} /> FCA Authorised
+            </span>
+            <Link to="/login" className={`text-sm font-medium px-4 py-2 rounded-lg border transition-all ${scrolled ? "border-lumio-primary text-lumio-primary hover:bg-lumio-primary hover:text-primary-foreground" : "border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10"}`}>
+              Log In
+            </Link>
+            <Link to="/register" className="text-sm font-medium px-4 py-2 rounded-lg bg-lumio-accent text-accent-foreground hover:bg-lumio-accent-light transition-all gold-glow-hover">
+              Open Account
+            </Link>
+          </div>
+          <button
+            onClick={() => setMobileOpen(o => !o)}
+            aria-label={mobileOpen ? "Close menu" : "Open menu"}
+            className="md:hidden z-[110] relative"
+          >
+            {mobileOpen
+              ? <X className="text-primary-foreground" size={24} />
+              : <Menu className={scrolled ? "text-foreground" : "text-primary-foreground"} size={24} />}
+          </button>
+        </div>
+      </motion.nav>
+
+      {/* Mobile fullscreen overlay — rendered outside nav so it's viewport-rooted */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            key="mobile-menu"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+            className="md:hidden fixed inset-0 z-[99] bg-lumio-dark"
+            style={{ height: "100dvh" }}
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 8 }}
+              transition={{ duration: 0.3, ease: "easeOut", delay: 0.05 }}
+              className="flex flex-col items-center justify-center gap-8 h-full"
+            >
+              {["Personal", "Business", "Wealth", "About", "Contact"].map((item, i) => (
+                <motion.a
+                  key={item}
+                  href="#"
+                  onClick={close}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.08 + i * 0.06, duration: 0.3, ease: "easeOut" }}
+                  className="text-primary-foreground text-2xl font-serif"
+                >
+                  {item}
+                </motion.a>
+              ))}
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.42, duration: 0.3, ease: "easeOut" }}
+                className="flex flex-col items-center gap-3 mt-4"
+              >
+                <Link to="/login" onClick={close} className="text-base px-8 py-3 rounded-lg border border-primary-foreground/30 text-primary-foreground w-48 text-center">
+                  Log In
+                </Link>
+                <Link to="/register" onClick={close} className="text-base px-8 py-3 rounded-lg bg-lumio-accent text-accent-foreground w-48 text-center font-medium">
+                  Open Account
+                </Link>
+              </motion.div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  );
 };
 
 const HeroSection = () =>
