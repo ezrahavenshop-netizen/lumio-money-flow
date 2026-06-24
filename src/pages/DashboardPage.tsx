@@ -106,6 +106,42 @@ interface TxRow {
   category: string;
 }
 
+// ── Live Clock ────────────────────────────────────────────────────────────────
+function LiveClock() {
+  const [now, setNow] = useState(new Date());
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const monthNames = ["January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"];
+
+  const day = dayNames[now.getDay()];
+  const date = now.getDate();
+  const month = monthNames[now.getMonth()];
+  const year = now.getFullYear();
+  const hours = String(now.getHours()).padStart(2, "0");
+  const mins = String(now.getMinutes()).padStart(2, "0");
+  const secs = String(now.getSeconds()).padStart(2, "0");
+
+  return (
+    <div className="flex items-center justify-between">
+      <div>
+        <p className="text-muted-foreground text-xs uppercase tracking-widest mb-0.5">{day}</p>
+        <p className="text-foreground font-serif text-xl leading-tight">{date} {month} {year}</p>
+      </div>
+      <div className="text-right">
+        <p className="text-muted-foreground text-xs uppercase tracking-widest mb-0.5">Local Time</p>
+        <p className="font-mono text-xl font-semibold text-lumio-accent tabular-nums leading-tight">
+          {hours}:{mins}<span className="text-muted-foreground text-base">:{secs}</span>
+        </p>
+      </div>
+    </div>
+  );
+}
+
 // ── Dashboard Sparkline ────────────────────────────────────────────────────────
 function DashSparkline({ data }: { data: number[] }) {
   if (data.length < 2) return null;
@@ -188,6 +224,11 @@ const DashboardPage: React.FC = () => {
 
   return (
     <motion.div variants={stagger} initial="initial" animate="animate" className="max-w-4xl mx-auto space-y-6 pb-16">
+
+      {/* Date & Time */}
+      <motion.div variants={fadeUp} className="glass-card-light px-5 py-4">
+        <LiveClock />
+      </motion.div>
 
       {/* Greeting */}
       {!dismissed && (
