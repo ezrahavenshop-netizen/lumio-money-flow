@@ -1,71 +1,8 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Shield, Lock, CheckCircle, ArrowRight, Star, Menu, X, Smartphone, TrendingUp, Clock, Headphones, CreditCard, PiggyBank, Eye, EyeOff } from "lucide-react";
+import { Shield, Lock, CheckCircle, ArrowRight, Star, Menu, X, Smartphone, TrendingUp, Clock, Headphones, CreditCard, PiggyBank } from "lucide-react";
 import LumioLogo from "@/components/LumioLogo";
-
-// ── Sparkline ──────────────────────────────────────────────────────────────────
-const sparkData = [412000, 418500, 410200, 425000, 430100, 440800, 438000, 450732];
-function Sparkline({ data, width = 280, height = 44 }: { data: number[]; width?: number; height?: number }) {
-  const min = Math.min(...data);
-  const max = Math.max(...data);
-  const pts = data.map((v, i) => {
-    const x = (i / (data.length - 1)) * width;
-    const y = height - ((v - min) / (max - min)) * (height * 0.7) - height * 0.15;
-    return `${x},${y}`;
-  });
-  const last = pts[pts.length - 1].split(",");
-  return (
-    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} overflow="visible">
-      <defs>
-        <linearGradient id="sg" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stopColor="#C9A85C" stopOpacity="0.4" />
-          <stop offset="100%" stopColor="#C9A85C" stopOpacity="1" />
-        </linearGradient>
-        <filter id="glow"><feGaussianBlur stdDeviation="2" result="blur"/>
-          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-        </filter>
-      </defs>
-      <polyline points={pts.join(" ")} fill="none" stroke="url(#sg)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-      <circle cx={last[0]} cy={last[1]} r="4" fill="#C9A85C" filter="url(#glow)" />
-      <circle cx={last[0]} cy={last[1]} r="2.5" fill="#ffffff" />
-    </svg>
-  );
-}
-
-// ── Animated counter ───────────────────────────────────────────────────────────
-function Counter({ target, duration = 1400 }: { target: number; duration?: number }) {
-  const [val, setVal] = useState(0);
-  useEffect(() => {
-    const start = Date.now();
-    const tick = () => {
-      const elapsed = Date.now() - start;
-      const progress = Math.min(elapsed / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setVal(Math.floor(eased * target));
-      if (progress < 1) requestAnimationFrame(tick);
-    };
-    requestAnimationFrame(tick);
-  }, [target, duration]);
-  return <>{val.toLocaleString("en-GB")}</>;
-}
-
-// ── Stat pill ──────────────────────────────────────────────────────────────────
-function StatPill({ label, value, positive }: { label: string; value: string; positive: boolean }) {
-  return (
-    <div style={{
-      display: "flex", flexDirection: "column", gap: 2,
-      padding: "8px 14px",
-      background: "rgba(255,255,255,0.06)",
-      border: "1px solid rgba(201,168,92,0.18)",
-      borderRadius: 10,
-      minWidth: 90,
-    }}>
-      <span style={{ fontSize: 10, color: "#B0BCCF", letterSpacing: "0.08em", textTransform: "uppercase" as const }}>{label}</span>
-      <span style={{ fontSize: 13, fontWeight: 600, color: positive ? "#5EC48A" : "#E07070", fontFamily: "monospace" }}>{value}</span>
-    </div>
-  );
-}
 
 const pageVariants = {
   initial: { opacity: 0, y: 24 },
@@ -129,141 +66,82 @@ const Navbar = () => {
 
 };
 
-const HeroSection = () => {
-  const [masked, setMasked] = useState(false);
-  return (
-    <section className="relative min-h-screen bg-lumio-dark flex items-center overflow-hidden">
-      {/* Ambient background */}
-      <div className="absolute inset-0">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-lumio-accent/10 blur-[200px] animate-gold-pulse" />
-      </div>
-
-      <div className="relative z-10 max-w-7xl mx-auto px-6 py-32 grid lg:grid-cols-5 gap-12 items-center">
-        {/* ── Left: text ── */}
-        <motion.div className="lg:col-span-3" variants={stagger} initial="initial" animate="animate">
-          <motion.p variants={fadeUp} className="label-uppercase text-lumio-accent mb-6">
-            Trusted by 50,000+ customers across the UK
-          </motion.p>
-          <motion.h1 variants={fadeUp} className="font-serif text-4xl md:text-6xl lg:text-[64px] text-primary-foreground leading-[1.1] tracking-tight mb-6" style={{ textWrap: "balance" } as React.CSSProperties}>
-            The smarter way to bank — anytime, anywhere.
-          </motion.h1>
-          <motion.p variants={fadeUp} className="text-base text-primary-foreground/60 max-w-[520px] mb-8 leading-relaxed">
-            Lumio gives you full control of your finances with instant transfers, real-time notifications, and the security of a fully regulated UK bank.
-          </motion.p>
-          <motion.div variants={fadeUp} className="flex flex-wrap items-center gap-4 mb-10">
-            <Link to="/register" className="inline-flex items-center gap-2 px-8 py-4 rounded-lg bg-lumio-accent text-accent-foreground font-medium text-base transition-all hover:bg-lumio-accent-light gold-glow-hover">
-              Open an Account
-            </Link>
-            <a href="#features" className="inline-flex items-center gap-2 text-primary-foreground/80 hover:text-primary-foreground text-sm font-medium transition-colors">
-              See How It Works <ArrowRight size={16} />
-            </a>
-          </motion.div>
-          <motion.div variants={fadeUp} className="flex flex-wrap gap-6 text-[13px] text-primary-foreground/50">
-            <span className="flex items-center gap-1.5"><CheckCircle size={14} className="text-lumio-accent" /> FCA Regulated</span>
-            <span className="flex items-center gap-1.5"><CheckCircle size={14} className="text-lumio-accent" /> FSCS Protected up to £85,000</span>
-            <span className="flex items-center gap-1.5"><CheckCircle size={14} className="text-lumio-accent" /> 256-bit SSL</span>
-          </motion.div>
+const HeroSection = () =>
+<section className="relative min-h-screen bg-lumio-dark flex items-center overflow-hidden">
+    <div className="absolute inset-0">
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-lumio-accent/10 blur-[200px] animate-gold-pulse" />
+    </div>
+    <div className="relative z-10 max-w-7xl mx-auto px-6 py-32 grid lg:grid-cols-5 gap-12 items-center">
+      <motion.div className="lg:col-span-3" variants={stagger} initial="initial" animate="animate">
+        <motion.p variants={fadeUp} className="label-uppercase text-lumio-accent mb-6">
+          Trusted by 50,000+ customers across the UK
+        </motion.p>
+        <motion.h1 variants={fadeUp} className="font-serif text-4xl md:text-6xl lg:text-[64px] text-primary-foreground leading-[1.1] tracking-tight mb-6" style={{ textWrap: "balance" } as React.CSSProperties}>
+          The smarter way to bank — anytime, anywhere.
+        </motion.h1>
+        <motion.p variants={fadeUp} className="text-base text-primary-foreground/60 max-w-[520px] mb-8 leading-relaxed">
+          Lumio gives you full control of your finances with instant transfers, real-time notifications, and the security of a fully regulated UK bank.
+        </motion.p>
+        <motion.div variants={fadeUp} className="flex flex-wrap items-center gap-4 mb-10">
+          <Link to="/register" className="inline-flex items-center gap-2 px-8 py-4 rounded-lg bg-lumio-accent text-accent-foreground font-medium text-base transition-all hover:bg-lumio-accent-light gold-glow-hover">
+            Open an Account
+          </Link>
+          <a href="#features" className="inline-flex items-center gap-2 text-primary-foreground/80 hover:text-primary-foreground text-sm font-medium transition-colors">
+            See How It Works <ArrowRight size={16} />
+          </a>
         </motion.div>
+        <motion.div variants={fadeUp} className="flex flex-wrap gap-6 text-[13px] text-primary-foreground/50">
+          <span className="flex items-center gap-1.5"><CheckCircle size={14} className="text-lumio-accent" /> FCA Regulated</span>
+          <span className="flex items-center gap-1.5"><CheckCircle size={14} className="text-lumio-accent" /> FSCS Protected up to £85,000</span>
+          <span className="flex items-center gap-1.5"><CheckCircle size={14} className="text-lumio-accent" /> 256-bit SSL</span>
+        </motion.div>
+      </motion.div>
 
-        {/* ── Right: premium card ── */}
-        <motion.div
-          className="lg:col-span-2 flex justify-center"
-          initial={{ opacity: 0, x: 40 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.6, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-        >
-          <div className="animate-float w-full max-w-[340px]" style={{
-            background: "linear-gradient(135deg, #162035 0%, #1E3054 50%, #0F2345 100%)",
-            borderRadius: 24,
-            padding: "24px",
-            border: "1px solid rgba(201,168,92,0.25)",
-            boxShadow: "0 24px 64px rgba(0,0,0,0.55), inset 0 1px 0 rgba(201,168,92,0.12)",
-            position: "relative",
-            overflow: "hidden",
-          }}>
-            {/* Shimmer lines */}
-            <div style={{
-              position: "absolute", inset: 0, borderRadius: 24, pointerEvents: "none",
-              background: "repeating-linear-gradient(115deg, transparent 0%, transparent 48%, rgba(201,168,92,0.03) 49%, rgba(201,168,92,0.03) 51%, transparent 52%)",
-            }} />
-
-            {/* Card header */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                {/* Chip */}
-                <div style={{ width: 36, height: 28, background: "linear-gradient(135deg, #C9A85C 0%, #A8841A 100%)", borderRadius: 5, boxShadow: "0 2px 8px rgba(201,168,92,0.4)" }} />
-                <div style={{ width: 20, height: 20, borderRadius: "50%", background: "radial-gradient(circle at 40% 40%, rgba(255,255,255,0.15), transparent)", border: "1px solid rgba(255,255,255,0.08)" }} />
-              </div>
-              <div style={{ textAlign: "right" }}>
-                <p style={{ fontSize: 11, fontWeight: 700, color: "#C9A85C", letterSpacing: "0.14em", textTransform: "uppercase", margin: 0 }}>Lumio Premier</p>
-                <p style={{ fontSize: 10, color: "#B0BCCF", margin: "2px 0 0", letterSpacing: "0.06em" }}>PRIVATE BANKING</p>
-              </div>
-            </div>
-
-            {/* Balance */}
-            <div style={{ marginBottom: 16 }}>
-              <p style={{ fontSize: 10, color: "#B0BCCF", letterSpacing: "0.1em", textTransform: "uppercase", margin: "0 0 6px" }}>Available Balance</p>
-              <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 8 }}>
-                <span style={{ fontSize: 13, fontWeight: 500, color: "#C9A85C", alignSelf: "flex-start", marginTop: 8, fontFamily: "monospace" }}>£</span>
-                <span style={{ fontSize: 36, fontWeight: 800, color: "#fff", letterSpacing: "-0.04em", lineHeight: 1 }}>
-                  {masked ? "••••••" : <Counter target={450732} duration={1400} />}
-                </span>
-                <span style={{ fontSize: 17, fontWeight: 400, color: "#B0BCCF", marginBottom: 4 }}>.00</span>
-              </div>
-              {/* Live dot */}
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#5EC48A", boxShadow: "0 0 0 3px rgba(94,196,138,0.25)", animation: "heroPulse 2s ease-in-out infinite" }} />
-                <span style={{ fontSize: 11, color: "#B0BCCF" }}>Live · updated in real time</span>
-              </div>
-            </div>
-
-            {/* Sparkline */}
-            <div style={{ marginBottom: 16, marginLeft: -4 }}>
-              <Sparkline data={sparkData} width={300} height={44} />
-            </div>
-
-            {/* Stat pills */}
-            <div style={{ display: "flex", gap: 8, marginBottom: 16, overflowX: "auto" }}>
-              <StatPill label="Month gain" value="+£9,732" positive={true} />
-              <StatPill label="Spent today" value="−£1,240" positive={false} />
-              <StatPill label="Saved" value="+£3,400" positive={true} />
-            </div>
-
-            {/* Card footer */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", borderTop: "1px solid rgba(201,168,92,0.12)", paddingTop: 14 }}>
+      <motion.div className="lg:col-span-2 relative" initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}>
+        <div className="animate-float relative mx-auto w-[280px]">
+          <div className="rounded-[32px] bg-gradient-to-b from-lumio-primary to-lumio-dark p-6 border border-primary-foreground/10 elevated-shadow">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 rounded-full bg-lumio-accent/20 flex items-center justify-center font-serif text-sm text-lumio-accent">KM</div>
               <div>
-                <p style={{ fontSize: 9, color: "#B0BCCF", margin: "0 0 3px", letterSpacing: "0.08em" }}>CARDHOLDER</p>
-                <p style={{ fontSize: 13, fontWeight: 600, color: "#fff", margin: 0, letterSpacing: "0.04em" }}>Lumio Client</p>
+                <p className="text-primary-foreground text-sm font-medium"></p>
+                <p className="text-primary-foreground/40 text-xs">Premier Account</p>
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <div style={{ textAlign: "right" }}>
-                  <p style={{ fontSize: 9, color: "#B0BCCF", margin: "0 0 3px", letterSpacing: "0.08em" }}>CARD NUMBER</p>
-                  <p style={{ fontSize: 13, color: "#B0BCCF", fontFamily: "monospace", margin: 0, letterSpacing: "0.12em" }}>
-                    {masked ? "•••• •••• ••••" : "**** **** 8812"}
-                  </p>
+            </div>
+            <p className="text-primary-foreground/40 text-[11px] uppercase tracking-wider mb-1">Balance</p>
+            <p className="text-primary-foreground font-serif text-2xl mb-6">£50,000.00</p>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-3 rounded-lg bg-primary-foreground/5">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded bg-lumio-success/20 flex items-center justify-center"><TrendingUp size={12} className="text-lumio-success" /></div>
+                  <span className="text-primary-foreground/70 text-xs">Salary Credit</span>
                 </div>
-                <button
-                  onClick={() => setMasked(m => !m)}
-                  style={{ background: "none", border: "none", cursor: "pointer", padding: 4, color: "#B0BCCF" }}
-                  title={masked ? "Show balance" : "Hide balance"}
-                >
-                  {masked ? <Eye size={14} /> : <EyeOff size={14} />}
-                </button>
+                <span className="text-lumio-success text-xs font-medium">+£11,000</span>
+              </div>
+              <div className="flex items-center justify-between p-3 rounded-lg bg-primary-foreground/5">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded bg-red-500/20 flex items-center justify-center"><ArrowRight size={12} className="text-red-400" /></div>
+                  <span className="text-primary-foreground/70 text-xs">Transfer Out</span>
+                </div>
+                <span className="text-red-400 text-xs font-medium">-£14,500</span>
               </div>
             </div>
           </div>
+        </div>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }} className="absolute -left-8 top-8 glass-card px-4 py-3">
+          <p className="text-primary-foreground text-sm font-medium">£2.4B+</p>
+          <p className="text-primary-foreground/50 text-[11px]">Transferred</p>
         </motion.div>
-      </div>
-
-      <style>{`
-        @keyframes heroPulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.4; }
-        }
-      `}</style>
-    </section>
-  );
-};
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }} className="absolute -right-4 top-1/2 glass-card px-4 py-3">
+          <p className="text-primary-foreground text-sm font-medium">99.9%</p>
+          <p className="text-primary-foreground/50 text-[11px]">Uptime</p>
+        </motion.div>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }} className="absolute -left-4 bottom-4 glass-card px-4 py-3">
+          <p className="text-primary-foreground text-sm font-medium flex items-center gap-1">4.8 <Star size={12} className="text-lumio-accent fill-lumio-accent" /></p>
+          <p className="text-primary-foreground/50 text-[11px]">App Rating</p>
+        </motion.div>
+      </motion.div>
+    </div>
+  </section>;
 
 const features = [
 { icon: ArrowRight, title: "Instant Transfers", desc: "Send money to any UK or global bank in seconds" },
