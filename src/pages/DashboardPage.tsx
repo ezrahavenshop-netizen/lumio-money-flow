@@ -106,6 +106,14 @@ interface TxRow {
   category: string;
 }
 
+// ── Greeting helper ───────────────────────────────────────────────────────────
+function getGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good Morning";
+  if (hour < 18) return "Good Afternoon";
+  return "Good Evening";
+}
+
 // ── Live Clock ────────────────────────────────────────────────────────────────
 function LiveClock() {
   const [now, setNow] = useState(new Date());
@@ -177,6 +185,12 @@ const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const [masked, setMasked] = useState(false);
   const [dismissed, setDismissed] = useState(false);
+  const [greeting, setGreeting] = useState(getGreeting);
+
+  useEffect(() => {
+    const id = setInterval(() => setGreeting(getGreeting()), 60_000);
+    return () => clearInterval(id);
+  }, []);
   const [recentTxns, setRecentTxns] = useState<TxRow[]>([]);
   const [sparkData, setSparkData] = useState<{ v: number }[]>([{ v: 0 }]);
 
@@ -233,7 +247,7 @@ const DashboardPage: React.FC = () => {
       {/* Greeting */}
       {!dismissed && (
         <motion.div variants={fadeUp} className="bg-lumio-accent/10 border border-lumio-accent/20 rounded-xl p-4 flex items-center justify-between">
-          <p className="text-foreground text-sm">Good morning, {user.firstName} 👋 — Here's your financial overview for today.</p>
+          <p className="text-foreground text-sm">{greeting}{user.firstName ? `, ${user.firstName}` : ""} 👋 — Here's your financial overview for today.</p>
           <button onClick={() => setDismissed(true)} className="text-muted-foreground text-xs hover:text-foreground">✕</button>
         </motion.div>
       )}

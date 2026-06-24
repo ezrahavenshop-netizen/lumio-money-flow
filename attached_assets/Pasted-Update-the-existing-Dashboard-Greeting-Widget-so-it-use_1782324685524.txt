@@ -1,0 +1,93 @@
+Update the existing Dashboard Greeting Widget so it uses the user's real-time local device time and automatically displays the appropriate greeting.
+
+Requirements
+
+The greeting widget should appear only on the Dashboard/Home page, not on the login page.
+
+The greeting must dynamically change based on the user's current local time:
+
+12:00 AM – 11:59 AM → Good Morning
+
+12:00 PM – 5:59 PM → Good Afternoon
+
+6:00 PM – 11:59 PM → Good Evening
+
+Personalized Greeting
+
+Display the logged-in user's first name.
+
+Examples:
+
+Good Morning, David
+
+Good Afternoon, David
+
+Good Evening, David
+
+If no first name is available, display only the greeting.
+
+Real-Time Updates
+
+The widget must:
+
+Calculate the greeting using the user's device/browser local time.
+
+Update automatically when the dashboard loads.
+
+Update when the app returns from the background.
+
+Update when the device timezone changes.
+
+Automatically switch greetings when crossing time boundaries without requiring a page refresh.
+
+Example:
+
+If the dashboard is open at 11:59 AM and the time becomes 12:00 PM, the greeting should automatically change from:
+
+"Good Morning, David"
+
+to
+
+"Good Afternoon, David"
+
+without refreshing the page.
+
+Implementation Requirements
+
+Do not use hardcoded greetings.
+
+Do not require an API call.
+
+Use client-side JavaScript/React time functions.
+
+Create a reusable helper function called getGreeting() that determines the greeting from the current hour.
+
+Set up a timer or listener so the greeting updates automatically while the dashboard remains open.
+
+Ensure the widget is lightweight and does not impact dashboard performance.
+
+Expected Logic
+
+function getGreeting() {
+  const hour = new Date().getHours();
+
+  if (hour < 12) return "Good Morning";
+  if (hour < 18) return "Good Afternoon";
+  return "Good Evening";
+}
+
+Success Criteria
+
+Dashboard always shows the correct greeting.
+
+Greeting updates in real time.
+
+Greeting includes the user's first name.
+
+Works across desktop and mobile devices.
+
+Works correctly in all time zones.
+
+No page refresh required for updates.
+
+Fully integrated into the existing Dashboard Header component without affecting other dashboard functionality.
