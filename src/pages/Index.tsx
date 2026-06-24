@@ -29,7 +29,12 @@ const Navbar = () => {
   }, []);
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? "bg-card/95 backdrop-blur-md shadow-md border-b border-border" : "bg-transparent"}`}>
+    <motion.nav
+      initial={{ opacity: 0, y: -16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? "bg-card/95 backdrop-blur-md shadow-md border-b border-border" : "bg-transparent"}`}
+    >
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
         <LumioLogo variant={scrolled ? "dark" : "light"} />
         <div className="hidden md:flex items-center gap-8">
@@ -62,7 +67,7 @@ const Navbar = () => {
           <Link to="/login" className="text-lg px-6 py-3 rounded-lg bg-lumio-accent text-accent-foreground" onClick={() => setMobileOpen(false)}>Log In</Link>
         </motion.div>
       }
-    </nav>);
+    </motion.nav>);
 
 };
 
@@ -276,38 +281,41 @@ const AppDownload = () =>
 
 
 const Footer = () =>
-<footer className="bg-lumio-dark py-16 border-t border-primary-foreground/5">
+<motion.footer
+  initial="initial" whileInView="animate" viewport={{ once: true }} variants={stagger}
+  className="bg-lumio-dark py-16 border-t border-primary-foreground/5"
+>
     <div className="max-w-7xl mx-auto px-6">
       <div className="grid md:grid-cols-4 gap-12 mb-12">
-        <div>
+        <motion.div variants={fadeUp}>
           <LumioLogo variant="light" size="lg" />
           <p className="text-primary-foreground/40 text-sm mt-3 leading-relaxed">The smarter way to bank — anytime, anywhere.</p>
-        </div>
+        </motion.div>
         {[
       { title: "Products", links: ["Personal", "Business", "Wealth", "Cards"] },
       { title: "Company", links: ["About", "Careers", "Press", "Contact"] },
       { title: "Legal", links: ["Privacy Policy", "Terms of Service", "Cookie Policy", "Complaints"] }].
       map((col) =>
-      <div key={col.title}>
+      <motion.div key={col.title} variants={fadeUp}>
             <h4 className="text-primary-foreground text-sm font-medium mb-4">{col.title}</h4>
             <ul className="space-y-2">
               {col.links.map((l) =>
           <li key={l}><a href="#" className="text-primary-foreground/40 hover:text-primary-foreground/70 text-sm transition-colors">{l}</a></li>
           )}
             </ul>
-          </div>
+          </motion.div>
       )}
       </div>
-      <div className="border-t border-primary-foreground/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+      <motion.div variants={fadeUp} className="border-t border-primary-foreground/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
         <p className="text-primary-foreground/30 text-xs">© 2025 Lumio Ltd. FCA Authorised. FSCS Protected. Registered in England & Wales.</p>
         <div className="flex gap-4 text-primary-foreground/30">
           {["LinkedIn", "X", "Instagram"].map((s) =>
         <a key={s} href="#" className="text-xs hover:text-primary-foreground/60 transition-colors">{s}</a>
         )}
         </div>
-      </div>
+      </motion.div>
     </div>
-  </footer>;
+  </motion.footer>;
 
 
 const LandingPage: React.FC = () =>

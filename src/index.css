@@ -176,3 +176,11 @@
 .animate-gold-pulse { animation: gold-pulse 4s ease-in-out infinite; }
 .animate-shake { animation: shake 0.3s ease-in-out; }
 .animate-diagonal { animation: diagonal-move 15s linear infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,0 +1,207 @@
+Replit AI Prompt – Add Subtle Entrance Animations to Landing Page Content
+
+Objective
+
+The landing page now loads much faster, which is excellent. However, once the page finishes loading, the remaining sections appear instantly with no transition, making the experience feel abrupt.
+
+Add subtle, professional entrance animations to the landing page so content smoothly appears rather than suddenly popping into view.
+
+⸻
+
+Current Issue
+
+After the landing page loads:
+
+* Hero content appears abruptly.
+* Text blocks instantly render.
+* Feature sections pop into view.
+* Cards and visual elements have no transition.
+* The page feels mechanically rendered rather than polished.
+
+The goal is not to add flashy animations, but to make the experience feel refined and intentional.
+
+⸻
+
+Desired Behaviour
+
+Landing page elements should smoothly animate into view when they first load.
+
+The animation should be:
+
+* Fast
+* Subtle
+* Professional
+* Lightweight
+* Modern
+* Barely noticeable but clearly smoother than an instant appearance
+
+⸻
+
+Recommended Animation
+
+Fade In + Slight Upward Movement
+
+Elements should:
+
+* Start at opacity: 0
+* Start 8–12px lower than their final position
+* Animate to opacity: 1
+* Animate to translateY(0)
+
+Duration:
+
+* 300ms–500ms
+
+Easing:
+
+ease-out
+
+⸻
+
+Landing Page Sections to Animate
+
+Apply the animation to:
+
+Hero Section
+
+* Headline
+* Subheadline
+* CTA buttons
+* Hero illustrations/images
+
+Navigation
+
+* Logo
+* Navigation links
+* Action buttons
+
+Feature Sections
+
+* Feature cards
+* Icons
+* Titles
+* Descriptions
+
+Statistics / Metrics
+
+* Numbers
+* Counters
+* Highlights
+
+Testimonials
+
+* Testimonial cards
+* Customer quotes
+* Profile images
+
+Pricing Section
+
+* Pricing cards
+* Plan descriptions
+* CTA buttons
+
+Footer Content
+
+* Footer links
+* Company information
+* Social icons
+
+⸻
+
+Staggered Appearance
+
+For a more premium feel, avoid showing all elements at the exact same moment.
+
+Suggested sequence:
+
+1. Navigation
+2. Hero headline
+3. Hero description
+4. CTA buttons
+5. Hero visual
+6. Remaining sections
+
+Use small stagger delays:
+
+* 50–100ms between elements
+* 100–150ms between major sections
+
+This should create a smooth cascading effect without making the page feel slower.
+
+⸻
+
+Scroll-Based Animations
+
+For sections further down the landing page:
+
+* Animate when they enter the viewport.
+* Trigger only once.
+* Do not replay continuously while scrolling.
+
+Use the same fade + slight upward motion.
+
+⸻
+
+Performance Requirements
+
+Animations must be optimized.
+
+Use:
+
+opacity
+transform: translateY()
+
+Avoid:
+
+width animations
+height animations
+margin animations
+heavy blur effects
+complex shadows
+expensive repaints
+
+Animations should remain smooth on mobile devices and lower-powered hardware.
+
+⸻
+
+Accessibility
+
+Respect user accessibility preferences.
+
+If:
+
+prefers-reduced-motion: reduce
+
+Then:
+
+* Disable animations.
+* Render content immediately.
+
+⸻
+
+Visual Goal
+
+The landing page should feel:
+
+* Premium
+* Modern
+* Smooth
+* Fast
+* Trustworthy
+
+Users should feel that content gracefully appears into place rather than abruptly popping onto the screen.
+
+The animation should enhance the experience without drawing attention to itself.
+
+⸻
+
+Success Criteria
+
+* No landing page content abruptly appears.
+* Hero section smoothly fades in.
+* Feature cards animate elegantly into view.
+* Scroll-triggered sections animate once when visible.
+* Performance remains excellent.
+* Mobile experience remains smooth.
+* Animations are subtle and professional.
+* The page feels noticeably more polished and production-ready.
