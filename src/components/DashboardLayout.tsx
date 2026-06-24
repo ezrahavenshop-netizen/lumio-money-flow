@@ -21,10 +21,24 @@ const navItems = [
 
 const COLLAPSED_KEY = "lumio_sidebar_collapsed";
 
+function useTawkWidget() {
+  useEffect(() => {
+    if (document.getElementById("tawk-script")) return;
+    const s1 = document.createElement("script");
+    s1.id = "tawk-script";
+    s1.async = true;
+    s1.src = "https://embed.tawk.to/6a3aa832452f781d473b573b/1jrqi2264";
+    s1.charset = "UTF-8";
+    s1.setAttribute("crossorigin", "*");
+    document.body.appendChild(s1);
+  }, []);
+}
+
 const DashboardLayout: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, userId, userStatus, setUserStatus, setBalance, setIsLoggedIn, notifications, markAllRead } = useApp();
+  useTawkWidget();
 
   const [collapsed, setCollapsed] = useState<boolean>(() => {
     try { return sessionStorage.getItem(COLLAPSED_KEY) === "true"; } catch { return false; }
