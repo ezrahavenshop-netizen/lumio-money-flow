@@ -469,7 +469,7 @@ const TransferPage: React.FC = () => {
             <div className="lg:col-span-3 space-y-5">
               <div>
                 <label className="block text-sm font-medium text-foreground mb-1.5">Recipient Full Name *</label>
-                <input value={recipientName} onChange={(e) => setRecipientName(e.target.value)} placeholder="Enter recipient's full name" className="w-full px-4 py-3 rounded-lg border border-border bg-card text-foreground text-sm focus-gold transition-all" />
+                <input value={recipientName} onChange={(e) => setRecipientName(e.target.value)} placeholder="Enter recipient's full name" className="w-full px-4 py-3 rounded-lg border border-border bg-card text-foreground text-base focus-gold transition-all" />
               </div>
 
               <div>
@@ -486,7 +486,7 @@ const TransferPage: React.FC = () => {
                   }}
                   placeholder="Enter account number"
                   maxLength={12}
-                  className={`w-full px-4 py-3 rounded-lg border text-foreground text-sm focus-gold transition-all bg-card ${
+                  className={`w-full px-4 py-3 rounded-lg border text-foreground text-base focus-gold transition-all bg-card ${
                     accountNumber.length > 0 && accountNumber.length < 8 ? "border-lumio-error"
                     : accountNumber.length >= 8 ? "border-lumio-success"
                     : "border-border"
@@ -502,7 +502,7 @@ const TransferPage: React.FC = () => {
 
               <div>
                 <label className="block text-sm font-medium text-foreground mb-1.5">Bank Name *</label>
-                <input value={bankName} onChange={(e) => setBankName(e.target.value)} placeholder="e.g. Barclays Bank, HSBC, Lloyds Bank..." className="w-full px-4 py-3 rounded-lg border border-border bg-card text-foreground text-sm focus-gold transition-all" />
+                <input value={bankName} onChange={(e) => setBankName(e.target.value)} placeholder="e.g. Barclays Bank, HSBC, Lloyds Bank..." className="w-full px-4 py-3 rounded-lg border border-border bg-card text-foreground text-base focus-gold transition-all" />
               </div>
 
               <div>
@@ -510,7 +510,7 @@ const TransferPage: React.FC = () => {
                 <p className="text-lumio-accent text-[13px] text-right mb-1">Available Balance: {formatCurrency(balance)}</p>
                 <div className="relative">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-medium">£</span>
-                  <input value={amount} onChange={(e) => setAmount(e.target.value.replace(/[^\d.]/g, ""))} placeholder="0.00" className={`w-full pl-8 pr-4 py-3 rounded-lg border text-foreground text-sm focus-gold transition-all bg-card ${isOverBalance ? "border-lumio-error" : isAmountValid ? "border-lumio-success" : "border-border"}`} />
+                  <input value={amount} onChange={(e) => setAmount(e.target.value.replace(/[^\d.]/g, ""))} placeholder="0.00" className={`w-full pl-8 pr-4 py-3 rounded-lg border text-foreground text-base focus-gold transition-all bg-card ${isOverBalance ? "border-lumio-error" : isAmountValid ? "border-lumio-success" : "border-border"}`} />
                 </div>
                 {isOverBalance && <p className="text-lumio-error text-xs mt-1 flex items-center gap-1"><AlertTriangle size={12} /> Insufficient funds. Available balance: {formatCurrency(balance)}</p>}
                 {isAmountValid && <p className="text-lumio-success text-xs mt-1 flex items-center gap-1"><CheckCircle size={12} /> Sufficient balance for this transfer</p>}
@@ -518,7 +518,7 @@ const TransferPage: React.FC = () => {
 
               <div>
                 <label className="block text-sm font-medium text-foreground mb-1.5">Payment Reference *</label>
-                <input value={narration} onChange={(e) => setNarration(e.target.value)} placeholder="e.g. Invoice payment, Property settlement, Rent" className="w-full px-4 py-3 rounded-lg border border-border bg-card text-foreground text-sm focus-gold transition-all" />
+                <input value={narration} onChange={(e) => setNarration(e.target.value)} placeholder="e.g. Invoice payment, Property settlement, Rent" className="w-full px-4 py-3 rounded-lg border border-border bg-card text-foreground text-base focus-gold transition-all" />
               </div>
 
               <div>

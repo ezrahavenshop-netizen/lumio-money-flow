@@ -10,7 +10,7 @@ import { toast } from "sonner";
 const genAccountNumber = () => String(Math.floor(10000000 + Math.random() * 90000000));
 
 const fieldBase =
-  "w-full px-4 py-3 rounded-lg border text-sm bg-white text-foreground transition-all focus:outline-none focus:ring-2";
+  "w-full px-4 py-3 rounded-lg border text-base bg-white text-foreground transition-all focus:outline-none focus:ring-2";
 const fieldOk = `${fieldBase} border-border focus:border-lumio-accent focus:ring-lumio-accent/20`;
 const fieldErr = `${fieldBase} border-red-400 focus:border-red-400 focus:ring-red-200`;
 const fieldSuccess = `${fieldBase} border-green-400 focus:border-green-400 focus:ring-green-100`;

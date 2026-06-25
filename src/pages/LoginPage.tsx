@@ -128,7 +128,7 @@ const LoginPage: React.FC = () => {
   };
 
   const fieldClass = (hasError: boolean) =>
-    `w-full px-4 py-3 rounded-lg border text-sm transition-all bg-white text-foreground focus:outline-none focus:ring-2 ${
+    `w-full px-4 py-3 rounded-lg border text-base transition-all bg-white text-foreground focus:outline-none focus:ring-2 ${
       hasError
         ? "border-red-400 ring-red-200 focus:border-red-400 focus:ring-red-200"
         : "border-border focus-gold"
