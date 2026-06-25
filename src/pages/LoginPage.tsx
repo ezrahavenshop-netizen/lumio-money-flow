@@ -135,11 +135,11 @@ const LoginPage: React.FC = () => {
     }`;
 
   return (
-    <div className="flex" style={{ minHeight: "100dvh" }}>
+    <div className="flex" style={{ height: "100svh", maxHeight: "100svh", overflow: "hidden" }}>
 
       {/* ── Left panel ── */}
       <div className="hidden lg:flex lg:w-[55%] relative overflow-hidden flex-col items-center justify-center p-12"
-        style={{ background: "#0A1628", minHeight: "100dvh" }}>
+        style={{ background: "#0A1628" }}>
 
         <div className="absolute inset-0 animate-diagonal"
           style={{
@@ -183,7 +183,7 @@ const LoginPage: React.FC = () => {
       </div>
 
       {/* ── Right panel ── */}
-      <div className="flex-1 flex items-center justify-center p-6 lg:p-12 bg-white overflow-hidden">
+      <div className="flex-1 flex items-start justify-center p-6 pt-16 lg:p-12 lg:items-center bg-white overflow-y-auto">
         <motion.div
           className="w-full max-w-md"
           initial={{ opacity: 0, y: 8 }}
