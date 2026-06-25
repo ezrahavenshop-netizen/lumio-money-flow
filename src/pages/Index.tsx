@@ -42,7 +42,7 @@ const Navbar = () => {
         initial={{ opacity: 0, y: -16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: "easeOut" }}
-        className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 ${scrolled ? "bg-card/95 backdrop-blur-md shadow-md border-b border-border" : "bg-transparent"}`}
+        className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 ${mobileOpen ? "bg-lumio-dark" : scrolled ? "bg-card/95 backdrop-blur-md shadow-md border-b border-border" : "bg-transparent"}`}
       >
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <LumioLogo variant={mobileOpen ? "light" : scrolled ? "dark" : "light"} />
