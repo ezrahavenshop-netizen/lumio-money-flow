@@ -1,0 +1,181 @@
+That sounds like a viewport or mobile layout issue rather than a login functionality issue.
+
+Use this prompt for Replit AI:
+
+Replit AI Prompt – Fix Login Screen Mobile Viewport and Layout Shifting Issue
+
+Issue
+
+The login screen occasionally behaves as if it is no longer constrained to the mobile viewport.
+
+Users sometimes experience:
+
+* The login form shifting unexpectedly.
+* Content appearing wider than the screen.
+* Horizontal movement when scrolling.
+* The page feeling “zoomed out” or detached from the mobile viewport.
+* Layout elements moving when they should remain fixed and responsive.
+* Inconsistent behavior between page loads.
+
+The issue appears intermittent rather than permanent.
+
+⸻
+
+Investigation Requirements
+
+Audit the entire login page and identify any causes of viewport instability.
+
+Check for:
+
+* Horizontal overflow.
+* Elements wider than the viewport.
+* Fixed-width containers.
+* Improper flexbox sizing.
+* Grid layouts exceeding screen width.
+* Transform animations affecting layout calculations.
+* Absolute-positioned elements escaping their container.
+* Mobile browser viewport inconsistencies.
+* Dynamic viewport height issues.
+* CSS causing layout shifts after hydration/rendering.
+
+⸻
+
+Mobile Viewport Requirements
+
+The login page must always remain fully responsive.
+
+Verify:
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+is correctly configured.
+
+Ensure all login page content remains within:
+
+width: 100%;
+max-width: 100%;
+overflow-x: hidden;
+
+where appropriate.
+
+⸻
+
+Container Stability
+
+Review all parent containers.
+
+Prevent:
+
+* Horizontal scrolling.
+* Layout overflow.
+* Unexpected width expansion.
+* Content rendering outside viewport boundaries.
+
+Check for components using:
+
+width: 100vw;
+
+which may cause overflow on mobile devices.
+
+Where appropriate, prefer:
+
+width: 100%;
+
+⸻
+
+Dynamic Height Support
+
+Mobile browsers can behave inconsistently with:
+
+height: 100vh;
+
+Review the login screen and replace problematic viewport calculations with modern viewport units where necessary:
+
+100dvh
+
+or responsive alternatives.
+
+The login page should remain stable when:
+
+* Browser UI appears/disappears.
+* Keyboard opens.
+* Keyboard closes.
+* Device orientation changes.
+
+⸻
+
+Keyboard Testing
+
+Verify behavior when users tap:
+
+* Email field.
+* Username field.
+* Password field.
+
+The login form should:
+
+* Remain centered.
+* Stay visible.
+* Not shift horizontally.
+* Not resize unexpectedly.
+* Not cause page jumping.
+
+⸻
+
+Animation Audit
+
+Review any login page animations.
+
+Ensure animations do not affect layout dimensions.
+
+Animations should only use:
+
+opacity
+transform
+
+Avoid animations that modify:
+
+width
+height
+margin
+padding
+left
+right
+top
+bottom
+
+as they may cause viewport instability.
+
+⸻
+
+Responsive Testing
+
+Test on:
+
+* iPhone Safari
+* iPhone Chrome
+* Android Chrome
+* Samsung Browser
+* Tablet viewports
+
+Verify:
+
+* No horizontal scrolling.
+* No viewport drift.
+* No content overflow.
+* No intermittent layout shifting.
+
+⸻
+
+Success Criteria
+
+* Login screen remains locked to the mobile viewport.
+* No horizontal movement.
+* No overflow issues.
+* No intermittent shifting.
+* Keyboard interactions remain stable.
+* Login form remains properly centered.
+* Responsive behavior is consistent across all mobile devices and browsers.
+* User experience feels stable, polished, and production-ready.
+
+The fact that it “sometimes” happens usually indicates either a 100vh mobile browser issue, a container overflow problem, or an animation/transform affecting layout calculations. Those are the first areas I’d investigate.
